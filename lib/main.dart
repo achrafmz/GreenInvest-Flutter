@@ -1,0 +1,45 @@
+// lib/main.dart
+import 'package:flutter/material.dart';
+import 'screens/auth_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/project_owner_dashboard.dart';
+import 'screens/create_project_screen.dart';
+import 'screens/investor_dashboard.dart';
+import 'screens/project_detail_screen.dart';
+import 'screens/my_investments_screen.dart';
+import 'screens/admin_dashboard.dart';
+import 'screens/pending_projects_screen.dart';
+import 'screens/investment_confirmation_screen.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'GreenInvest',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/auth': (context) => const AuthScreen(),
+        '/dashboard': (context) => const ProjectOwnerDashboard(),
+        '/create-project': (context) => const CreateProjectScreen(),
+        '/investor-dashboard': (context) => const InvestorDashboard(),
+        '/project-detail': (context) => const ProjectDetailScreen(),
+        '/my-investments': (context) => const MyInvestmentsScreen(),
+        '/admin-dashboard': (context) => const AdminDashboard(),
+        '/pending-projects': (context) => const PendingProjectsScreen(),
+        '/investment-confirmation': (context) => const InvestmentConfirmationScreen(),
+      },
+    );
+  }
+}
