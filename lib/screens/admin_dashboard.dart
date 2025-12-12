@@ -22,13 +22,20 @@ class AdminDashboard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Administration',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Administration',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      _ProfileButton(onPressed: () => Navigator.pushNamed(context, '/profile')),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   const Text(
@@ -240,6 +247,24 @@ class AdminDashboard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ProfileButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  const _ProfileButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: const CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.white,
+        child: Icon(Icons.person, color: AppColors.primary),
+      ),
+      tooltip: 'Profil',
     );
   }
 }

@@ -1,6 +1,9 @@
 // lib/screens/project_owner_dashboard.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
+import '../widgets/user_menu_button.dart';
 
 class ProjectOwnerDashboard extends StatelessWidget {
   const ProjectOwnerDashboard({super.key});
@@ -9,38 +12,48 @@ class ProjectOwnerDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        toolbarHeight: 80,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        automaticallyImplyLeading: true,
+        title: Consumer<AuthService>(
+          builder: (context, auth, child) {
+            final username = auth.currentUser?.username ?? 'Utilisateur';
+            final capitalized = username.isNotEmpty 
+                ? '${username[0].toUpperCase()}${username.substring(1)}' 
+                : username;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bonjour $capitalized',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  'Bienvenue sur votre tableau de bord',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        actions: const [
+          UserMenuButton(),
+          SizedBox(width: 16),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Bonjour Hajar',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Bienvenue sur votre tableau de bord',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Removed custom container header
+            const SizedBox(height: 24),
             const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -161,3 +174,4 @@ class ProjectOwnerDashboard extends StatelessWidget {
     );
   }
 }
+

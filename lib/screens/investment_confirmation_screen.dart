@@ -1,6 +1,7 @@
 // lib/screens/investment_confirmation_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/snackbar_helper.dart';
 
 class InvestmentConfirmationScreen extends StatelessWidget {
   const InvestmentConfirmationScreen({super.key});
@@ -136,9 +137,7 @@ class InvestmentConfirmationScreen extends StatelessWidget {
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Contrat téléchargé !')),
-                              );
+                              showTopSnackBar(context, 'Contrat téléchargé !');
                             },
                             icon: const Icon(Icons.download, size: 16),
                             label: const Text('Télécharger le contrat PDF'),

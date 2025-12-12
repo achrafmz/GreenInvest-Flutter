@@ -1,6 +1,7 @@
 // lib/screens/pending_projects_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/snackbar_helper.dart';
 
 class PendingProjectsScreen extends StatelessWidget {
   const PendingProjectsScreen({super.key});
@@ -174,9 +175,7 @@ class PendingProjectsScreen extends StatelessWidget {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Projet "$name" validé')),
-                                );
+                                showTopSnackBar(context, 'Projet "$name" validé');
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
@@ -200,9 +199,7 @@ class PendingProjectsScreen extends StatelessWidget {
                           Expanded(
                             child: OutlinedButton(
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Projet "$name" refusé')),
-                                );
+                                showTopSnackBar(context, 'Projet "$name" refusé', backgroundColor: Colors.red);
                               },
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.red,
