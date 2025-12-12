@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../constants/app_colors.dart';
 import '../services/project_service.dart';
 import 'project_detail_screen.dart';
+import '../widgets/user_menu_button.dart';
 
 class AdminUserDetailScreen extends StatefulWidget {
   final User user;
@@ -21,7 +22,8 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
     // Charger les projets si c'est un porteur de projet
     if (widget.user.role == 'PORTEUR_PROJET') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<ProjectService>().fetchOwnerProjects(widget.user.id);
+        // Use the new Admin specific method which handles pending projects
+        context.read<ProjectService>().fetchUserProjectsAsAdmin(widget.user.id);
       });
     }
   }
@@ -30,10 +32,12 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         title: Text(widget.user.username),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        actions: const [UserMenuButton()],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

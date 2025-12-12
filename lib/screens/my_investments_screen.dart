@@ -1,6 +1,7 @@
 // lib/screens/my_investments_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/user_menu_button.dart';
 
 class MyInvestmentsScreen extends StatelessWidget {
   const MyInvestmentsScreen({super.key});
@@ -9,11 +10,13 @@ class MyInvestmentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+// ... (UserMenuButton import moved to top)
       appBar: AppBar(
         title: const Text('Mes investissements'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         centerTitle: false,
+        actions: const [UserMenuButton()],
       ),
       body: SafeArea(
         child: Column(

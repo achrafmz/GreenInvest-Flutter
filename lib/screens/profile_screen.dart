@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
 import '../widgets/snackbar_helper.dart';
+import '../widgets/user_menu_button.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -99,6 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             },
           ),
+          const UserMenuButton(),
         ],
       ),
       body: SingleChildScrollView(

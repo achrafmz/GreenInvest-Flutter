@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import '../constants/app_colors.dart';
 import 'admin_user_detail_screen.dart';
+import '../widgets/user_menu_button.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -135,10 +136,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+
       appBar: AppBar(
         title: const Text('Gestion des Utilisateurs'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        actions: const [UserMenuButton()],
       ),
       body: Column(
         children: [

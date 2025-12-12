@@ -14,13 +14,22 @@ class ProjectService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchPublicProjects() async {
+  Future<void> fetchProjects({int page = 0, int size = 10}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final response = await _apiService.client.get('/public/projets');
+      final response = await _apiService.client.get(
+        '/projets', 
+        queryParameters: {
+          'page': page,
+          'size': size,
+          'sortBy': 'dateCreation',
+          'direction': 'DESC'
+        }
+      );
+      
       if (response.statusCode == 200) {
         _projects = _parseProjects(response.data);
       } else {
@@ -28,12 +37,17 @@ class ProjectService extends ChangeNotifier {
       }
     } catch (e) {
       _error = e.toString();
-      debugPrint('Erreur chargement projets publics: $e');
+      debugPrint('Erreur chargement projets: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
+
+  // Legacy kept for compatibility if needed, but implementation updated to use new logic if desired or kept as is.
+  // Converting fetchPublicProjects to use the new standard method for now? 
+  // User might want specific params. Let's alias it.
+  Future<void> fetchPublicProjects() => fetchProjects();
 
   Future<void> fetchOwnerProjects(String ownerId) async {
     _isLoading = true;
@@ -103,6 +117,64 @@ class ProjectService extends ChangeNotifier {
     }
     return _projects.where((p) => p.ownerId == ownerId).toList();
   }
+  Future<List<Project>> fetchAdminProjects() async {
+    _isLoading = true;
+    notifyListeners();
+    List<Project> adminProjects = [];
+
+    try {
+      // Endpoint probable pour voir tous les projets (admin)
+      final response = await _apiService.client.get('/admin/projets');
+      
+      if (response.statusCode == 200) {
+        final dynamic rawWrapper = response.data;
+        List<dynamic> listData = [];
+
+        if (rawWrapper is Map && rawWrapper.containsKey('data')) {
+           listData = rawWrapper['data'];
+        } else if (rawWrapper is List) {
+          listData = rawWrapper;
+        }
+
+        adminProjects = listData.map((json) => Project.fromJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('⚠️ /admin/projets failed: $e');
+      // Fallback: fetch public and try simple filter? No, public won't have pending.
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+    return adminProjects;
+  }
+
+  // Méthode spécifique pour l'admin qui veut voir les projets d'un user
+  Future<void> fetchUserProjectsAsAdmin(String userId) async {
+    _isLoading = true;
+    _error = null; // Reset error
+    notifyListeners();
+    print('🔍 Fetching projects for user: $userId');
+    try {
+        final response = await _apiService.client.get('/porteur/mes-projets', queryParameters: {'porteurId': userId});
+         
+         print('🔍 Response code: ${response.statusCode}');
+         
+         if (response.statusCode == 200) {
+            _ownerProjects = _parseProjects(response.data);
+            print('✅ Found ${_ownerProjects.length} projects via specific endpoint');
+         } else {
+           _error = 'Error ${response.statusCode}: ${response.statusMessage}';
+           print('❌ API Error: $_error');
+         }
+    } catch (e) {
+       _error = e.toString();
+       print('❌ fetchUserProjectsAsAdmin Error: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> createProject({
     required String nom,
     required String description,
@@ -133,11 +205,6 @@ class ProjectService extends ChangeNotifier {
       print('✅ Create Project Response: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Note: idealement on devrait repasser l'ID ici, mais createProject n'a pas l'ID.
-        // On laisse le refresh de fetchOwnerProjects à l'écran appelant ou on ajoute l'ID à createProject.
-        // Pour l'instant, update rapide pour eviter l'erreur de compilation:
-        // await fetchOwnerProjects(ownerId); -> Impossible sans l'ID.
-        // On retire le fetchOwnerProjects d'ici et on le laisse au Dashboard quand on revient.
         await fetchPublicProjects(); 
         return true;
       }
