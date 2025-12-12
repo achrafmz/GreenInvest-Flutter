@@ -93,23 +93,31 @@ class AuthService extends ChangeNotifier {
         return;
       }
 
-      // 1. Essayer de reconstruire l'utilisateur depuis le token immédiatement
-      final tokenUser = _getUserFromToken(token);
-      if (tokenUser != null) {
-        _currentUser = tokenUser;
-        _debugStatus = 'Token: ${tokenUser.role}';
-        notifyListeners();
-      }
+      final parts = token.split('.');
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final json = jsonDecode(decoded);
 
-      final username = _decodeJwtUsername(token);
-      if (username.isEmpty) {
-        _debugStatus = 'JWT decode fail';
-        notifyListeners();
-        return;
-      }
+      final userId = json['sub'] ?? '';
+      final username = json['preferred_username'] ?? json['sub'] ?? '';
       
       _debugStatus = 'Fetching API...';
       try {
+        // TENTATIVE 1: /users/me (Nouvelle méthode standard)
+        try {
+          final responseMe = await _apiService.client.get('/users/me');
+          if (responseMe.statusCode == 200) {
+            _currentUser = User.fromJson(responseMe.data);
+            _debugStatus = 'Found API (Me)';
+            notifyListeners();
+            return;
+          }
+        } catch (e) {
+          print('⚠️ GET /users/me failed: $e. Falling back to list search.');
+        }
+
+        // TENTATIVE 2: Liste complète (Fallback)
         final response = await _apiService.client.get('/users');
 
         if (response.statusCode == 200) {
@@ -124,12 +132,9 @@ class AuthService extends ChangeNotifier {
              listCallback = rawData['content'];
           } else {
              _debugStatus = 'Bad data format';
-             // On garde l'utilisateur du token si on l'a
              return;
           }
 
-          _debugStatus = 'Search $username in ${listCallback.length}';
-          
           final userJson = listCallback.firstWhere(
             (u) => 
               (u['username']?.toString().toLowerCase() ?? '') == username.toLowerCase() ||
@@ -141,15 +146,37 @@ class AuthService extends ChangeNotifier {
             _currentUser = User.fromJson(userJson);
             _debugStatus = 'Found API: ${_currentUser?.role}';
           } else {
-             _debugStatus = 'Not in list (Using Token)';
+             _debugStatus = 'Not in list';
           }
-        } else {
-          _debugStatus = 'API ${response.statusCode} (Using Token)';
         }
       } catch (e) {
-        _debugStatus = 'API Fail: $e';
-        // En cas d'erreur API, on garde ce qu'on a trouvé dans le token
+        // Si la liste échoue (ex: 403), on essaie de récupérer juste NOTRE utilisateur par ID
+        print('⚠️ GET /users failed. Trying GET /users/$userId');
+        
+        if (userId.isNotEmpty) {
+           try {
+             final responseMe = await _apiService.client.get('/users/$userId');
+             if (responseMe.statusCode == 200) {
+               _currentUser = User.fromJson(responseMe.data);
+               _debugStatus = 'Found API (Direct)';
+               notifyListeners();
+             }
+           } catch (e2) {
+             print('⚠️ GET /users/$userId failed too: $e2');
+             _debugStatus = 'API Fail: $e';
+           }
+        }
       }
+      
+      // ULTIME FALLBACK: Si l'API a échoué complètement, on utilise les infos du token
+      if (_currentUser == null) {
+         print('⚠️ Using Token Fallback as API failed completely');
+         _currentUser = _getUserFromToken(token);
+         if (_currentUser != null) {
+            _debugStatus = 'Token Fallback (${_currentUser!.role})';
+         }
+      }
+
     } catch (e) {
       _debugStatus = 'Gen Except: $e';
     }
@@ -167,6 +194,7 @@ class AuthService extends ChangeNotifier {
       final decoded = utf8.decode(base64Url.decode(normalized));
       final json = jsonDecode(decoded);
       
+      final userId = json['sub'] ?? 'token_user'; // Utiliser le vrai ID Keycloak (sub)
       final username = json['preferred_username'] ?? json['sub'] ?? '';
       final email = json['email'] ?? '';
       
@@ -192,9 +220,9 @@ class AuthService extends ChangeNotifier {
       }
       
       if (username.isNotEmpty) {
-        print('🔑 _getUserFromToken: Extracted $username, Role: $role');
+        print('🔑 _getUserFromToken: Extracted $username ($userId), Role: $role');
         return User(
-          id: 'token_user', // ID temporaire
+          id: userId,
           username: username,
           email: email,
           role: role,
@@ -245,7 +273,7 @@ class AuthService extends ChangeNotifier {
       }
 
       final response = await _apiService.client.put(
-        '/users/$id',
+        '/users/me',
         data: data,
       );
 
@@ -256,7 +284,7 @@ class AuthService extends ChangeNotifier {
         // Rafraîchir l'utilisateur localement
         // Idéalement, l'API renvoie l'objet mis à jour
         _currentUser = User(
-          id: id,
+          id: id, // On garde l'ID qu'on avait
           username: username,
           email: email,
           role: _currentUser?.role ?? '',
