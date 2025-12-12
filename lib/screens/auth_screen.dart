@@ -42,12 +42,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
     // Validation
     if (username.isEmpty || password.isEmpty) {
-      showTopSnackBar(context, 'Nom d\'utilisateur et mot de passe requis');
+      showTopSnackBar(context, 'Nom d\'utilisateur et mot de passe requis', isError: true);
       return;
     }
 
     if (!_isLoginMode && email.isEmpty) {
-      showTopSnackBar(context, 'L\'email est requis pour l\'inscription');
+      showTopSnackBar(context, 'L\'email est requis pour l\'inscription', isError: true);
       return;
     }
 
@@ -66,7 +66,7 @@ class _AuthScreenState extends State<AuthScreen> {
           Navigator.pushReplacementNamed(context, '/investor-dashboard');
         }
       } else if (mounted) {
-        showTopSnackBar(context, 'Échec de la connexion. Vérifiez vos identifiants.');
+        showTopSnackBar(context, 'Échec de la connexion. Vérifiez vos identifiants.', isError: true);
       }
     } else {
       // ✅ SIGNUP
@@ -89,7 +89,6 @@ class _AuthScreenState extends State<AuthScreen> {
           showTopSnackBar(
             context,
             result['message'] ?? 'Inscription réussie ! Veuillez vous connecter.',
-            backgroundColor: Colors.green,
           );
           setState(() {
             _isLoginMode = true;
@@ -98,7 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
           showTopSnackBar(
             context,
             result['message'] ?? 'Erreur lors de l\'inscription.',
-            backgroundColor: Colors.red,
+            isError: true,
             duration: const Duration(seconds: 5),
           );
         }
@@ -200,7 +199,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 label: 'Nom d\'utilisateur',
                 controller: _usernameController,
                 icon: Icons.person,
-                hintText: 'john_doe',
+                hintText: 'username',
               ),
               const SizedBox(height: 24),
 

@@ -52,11 +52,11 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       if (!mounted) return;
 
       if (success) {
-        showTopSnackBar(context, 'Projet créé avec succès !', backgroundColor: Colors.green);
+        showTopSnackBar(context, 'Projet créé avec succès !');
         Navigator.pop(context);
         // Optionnel : Recharger le dashboard
       } else {
-        showTopSnackBar(context, service.error ?? 'Erreur lors de la création', backgroundColor: Colors.red);
+        showTopSnackBar(context, service.error ?? 'Erreur lors de la création', isError: true);
       }
     }
   }

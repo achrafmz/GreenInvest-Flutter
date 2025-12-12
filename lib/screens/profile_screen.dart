@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
 import '../widgets/snackbar_helper.dart';
+import '../widgets/user_menu_button.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -58,10 +59,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       if (success) {
-        showTopSnackBar(context, 'Profil mis à jour avec succès', backgroundColor: Colors.green);
+        showTopSnackBar(context, 'Profil mis à jour avec succès');
         setState(() => _isEditing = false);
       } else {
-        showTopSnackBar(context, 'Erreur lors de la mise à jour', backgroundColor: Colors.red);
+        showTopSnackBar(context, 'Erreur lors de la mise à jour', isError: true);
       }
     }
   }
@@ -99,6 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             },
           ),
+          const UserMenuButton(),
         ],
       ),
       body: SingleChildScrollView(

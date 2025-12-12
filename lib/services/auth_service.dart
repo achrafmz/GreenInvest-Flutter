@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+// import 'dart:io'; // Removed for Web compatibility
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
@@ -18,8 +18,7 @@ class AuthService extends ChangeNotifier {
 
   // Configuration Keycloak
   static String get keycloakUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    if (Platform.isAndroid) return 'http://10.0.2.2:8080';
+    // Pour le web et l'émulateur par défaut
     return 'http://localhost:8080';
   }
   static const String realm = 'microfinance_realm';

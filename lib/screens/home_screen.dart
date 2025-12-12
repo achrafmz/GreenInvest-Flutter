@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../services/project_service.dart';
 import '../constants/app_colors.dart';
 import 'project_detail_screen.dart';
+import '../widgets/user_menu_button.dart';
+import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,28 +17,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Charger les projets au démarrage de l'écran
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProjectService>().fetchPublicProjects();
+    // Charger les projets publics au démarrage de l'écran
+    Future.microtask(() {
+      if (mounted) {
+        context.read<ProjectService>().fetchPublicProjects();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthService>().currentUser;
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              // Logo & titre
-              CircleAvatar(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+             CircleAvatar(
                 backgroundColor: AppColors.primary,
-                radius: 28,
-                child: Icon(Icons.eco, color: Colors.white, size: 32),
+                radius: 16,
+                child: Icon(Icons.eco, color: Colors.white, size: 20),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(width: 8),
               const Text(
                 'GreenInvest',
                 style: TextStyle(
@@ -45,7 +49,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+          ],
+        ),
+        actions: [
+           if (user != null) const UserMenuButton()
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              // Logo & titre removed from body as moved to AppBar
               const Text(
                 'Financez les énergies de demain, dès aujourd’hui.',
                 textAlign: TextAlign.center,
@@ -130,14 +145,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Center(child: Text('Erreur: ${projectService.error}'));
                     }
 
-                    if (projectService.projects.isEmpty) {
+                    // Filter for VALIDE projects only (validated projects ready for investment)
+                    final validProjects = projectService.projects
+                        .where((p) => p.status?.toUpperCase() == 'VALIDE')
+                        .toList();
+
+                    if (validProjects.isEmpty) {
                       return const Center(child: Text('Aucun projet disponible.'));
                     }
 
                     return ListView.builder(
-                      itemCount: projectService.projects.length,
+                      itemCount: validProjects.length,
                       itemBuilder: (context, index) {
-                        final project = projectService.projects[index];
+                        final project = validProjects[index];
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
