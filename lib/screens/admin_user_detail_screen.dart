@@ -105,6 +105,17 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
+                    if (projectService.error != null) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        color: Colors.red[50],
+                        child: Text(
+                          'Erreur: ${projectService.error}\n(L\'endpoint Admin pour les projets ne répond pas)',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      );
+                    }
+
                     if (projects.isEmpty) {
                       return const Text('Aucun projet trouvé pour cet utilisateur.');
                     }

@@ -1,4 +1,4 @@
-import 'dart:io';
+// import 'dart:io'; // Removed for web compatibility
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -14,10 +14,10 @@ class ApiService {
       // Note: Parfois les navigateurs préfèrent 127.0.0.1
       return 'http://127.0.0.1:8081';
       // Alternative : 'http://localhost:8081' si 127.0.0.1 ne marche pas
-    } else if (Platform.isAndroid) {
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
       // ✅ Android Emulator : 10.0.2.2 = localhost de la machine hôte
       return 'http://10.0.2.2:8081';
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       // ✅ iOS Simulator : localhost fonctionne directement
       return 'http://localhost:8081';
     } else {

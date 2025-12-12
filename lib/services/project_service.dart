@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import '../models/project_model.dart';
 import 'api_service.dart';
 
@@ -14,12 +15,51 @@ class ProjectService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+
+  // Pour la page publique (HomeScreen) - Endpoint public sans auth
+  Future<void> fetchPublicProjects({int page = 0, int size = 10}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      debugPrint('🔍 Fetching PUBLIC projects from /public/projets with page=$page, size=$size');
+      final response = await _apiService.client.get(
+        '/public/projets', 
+        queryParameters: {
+          'page': page,
+          'size': size,
+          'sortBy': 'dateCreation',
+          'direction': 'DESC'
+        }
+      );
+      
+      debugPrint('📥 /public/projets response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        _projects = _parseProjects(response.data);
+        debugPrint('✅ Loaded ${_projects.length} public projects');
+      } else {
+        _error = 'Erreur serveur: ${response.statusCode}';
+        debugPrint('❌ Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ Erreur chargement projets publics: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Pour l'admin (PendingProjectsScreen) - Endpoint avec auth
   Future<void> fetchProjects({int page = 0, int size = 10}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      debugPrint('🔍 Fetching ALL projects from /projets with page=$page, size=$size (ADMIN)');
       final response = await _apiService.client.get(
         '/projets', 
         queryParameters: {
@@ -30,24 +70,26 @@ class ProjectService extends ChangeNotifier {
         }
       );
       
+      debugPrint('📥 /projets response: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
         _projects = _parseProjects(response.data);
+        debugPrint('✅ Loaded ${_projects.length} projects (all statuses)');
+      } else if (response.statusCode == 401) {
+        _error = 'Non autorisé. Veuillez vous reconnecter.';
+        debugPrint('❌ 401 Unauthorized - Token invalide ou expiré');
       } else {
         _error = 'Erreur serveur: ${response.statusCode}';
+        debugPrint('❌ Server error: ${response.statusCode}');
       }
     } catch (e) {
       _error = e.toString();
-      debugPrint('Erreur chargement projets: $e');
+      debugPrint('❌ Erreur chargement projets: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
-
-  // Legacy kept for compatibility if needed, but implementation updated to use new logic if desired or kept as is.
-  // Converting fetchPublicProjects to use the new standard method for now? 
-  // User might want specific params. Let's alias it.
-  Future<void> fetchPublicProjects() => fetchProjects();
 
   Future<void> fetchOwnerProjects(String ownerId) async {
     _isLoading = true;
@@ -61,9 +103,8 @@ class ProjectService extends ChangeNotifier {
       );
       
       if (response.statusCode == 200) {
-        // La réponse est enveloppée dans "data"
         final dynamic rawWrapper = response.data;
-        debugPrint('🔍 Raw Owner Projects Response: $rawWrapper'); // DEBUG LOG
+        debugPrint('🔍 Raw Owner Projects Response: $rawWrapper');
 
         List<dynamic> listData = [];
 
@@ -77,7 +118,6 @@ class ProjectService extends ChangeNotifier {
         }
 
         _ownerProjects = listData.map((json) {
-          debugPrint('Parsing project: $json'); // DEBUG LOG
           return Project.fromJson(json);
         }).toList();
         
@@ -108,22 +148,19 @@ class ProjectService extends ChangeNotifier {
     return listData.map((json) => Project.fromJson(json)).toList();
   }
 
-  // Ancien getter (optionnel, ou on utilise ownerProjects direct)
   List<Project> getProjectsByOwner(String ownerId) {
-    // Si on a chargé spécifiquement les projets du owner, on les retourne directement
-    // sans revérifier l'ID (au cas où il y aurait une mismatch ou null)
     if (_ownerProjects.isNotEmpty) {
       return _ownerProjects;
     }
     return _projects.where((p) => p.ownerId == ownerId).toList();
   }
+  
   Future<List<Project>> fetchAdminProjects() async {
     _isLoading = true;
     notifyListeners();
     List<Project> adminProjects = [];
 
     try {
-      // Endpoint probable pour voir tous les projets (admin)
       final response = await _apiService.client.get('/admin/projets');
       
       if (response.statusCode == 200) {
@@ -140,7 +177,6 @@ class ProjectService extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('⚠️ /admin/projets failed: $e');
-      // Fallback: fetch public and try simple filter? No, public won't have pending.
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -148,24 +184,51 @@ class ProjectService extends ChangeNotifier {
     return adminProjects;
   }
 
-  // Méthode spécifique pour l'admin qui veut voir les projets d'un user
   Future<void> fetchUserProjectsAsAdmin(String userId) async {
     _isLoading = true;
-    _error = null; // Reset error
+    _error = null;
+    _ownerProjects = [];
     notifyListeners();
     print('🔍 Fetching projects for user: $userId');
     try {
-        final response = await _apiService.client.get('/porteur/mes-projets', queryParameters: {'porteurId': userId});
-         
-         print('🔍 Response code: ${response.statusCode}');
-         
-         if (response.statusCode == 200) {
-            _ownerProjects = _parseProjects(response.data);
-            print('✅ Found ${_ownerProjects.length} projects via specific endpoint');
-         } else {
-           _error = 'Error ${response.statusCode}: ${response.statusMessage}';
-           print('❌ API Error: $_error');
-         }
+        // Attempt 1: /porteur/mes-projets
+        try {
+          final response = await _apiService.client.get('/porteur/mes-projets', queryParameters: {'porteurId': userId});
+          if (response.statusCode == 200) {
+              _ownerProjects = _parseProjects(response.data);
+              print('✅ Found ${_ownerProjects.length} projects via /porteur/mes-projets');
+              return;
+          }
+        } catch (e) {
+          print('⚠️ /porteur/mes-projets failed: $e');
+        }
+
+        // Attempt 2: /projets with filter
+        try {
+           final response = await _apiService.client.get('/projets', queryParameters: {'porteurId': userId});
+           if (response.statusCode == 200) {
+              final projects = _parseProjects(response.data);
+              _ownerProjects = projects.where((p) => p.ownerId == userId).toList();
+              print('✅ Found ${_ownerProjects.length} projects via /projets');
+              return;
+           }
+        } catch (e) {
+           print('⚠️ /projets?porteurId failed: $e');
+        }
+
+        // Attempt 3: /admin/projets
+        try {
+           final response = await _apiService.client.get('/admin/projets', queryParameters: {'porteurId': userId});
+           if (response.statusCode == 200) {
+              _ownerProjects = _parseProjects(response.data);
+              return;
+           }
+        } catch (e) {
+           print('⚠️ /admin/projets failed: $e');
+        }
+        
+        _error = "Impossible de récupérer les projets (403/500) après 3 tentatives.";
+
     } catch (e) {
        _error = e.toString();
        print('❌ fetchUserProjectsAsAdmin Error: $e');
@@ -212,6 +275,54 @@ class ProjectService extends ChangeNotifier {
     } catch (e) {
       print('❌ Create Project Error: $e');
       _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateProjectStatus(String projectId, String newStatus) async {
+    _isLoading = true;
+    notifyListeners();
+    print('🔄 Update Status: $projectId -> $newStatus');
+    
+    try {
+      // Endpoint corrigé : /projets/{id}/statut?statut={status}
+      final response = await _apiService.client.put(
+        '/projets/$projectId/statut',
+        queryParameters: {'statut': newStatus},
+      );
+
+      print('🔄 Update Status Response: ${response.statusCode}');
+      print('📄 Response Data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        // Update local state if successful
+        final index = _projects.indexWhere((p) => p.id == projectId);
+        if (index != -1) {
+          // Re-fetch everything to be safe
+          await fetchProjects();
+          // Force refresh
+          notifyListeners(); 
+        }
+        // Also update owner projects if present
+        if (_ownerProjects.isNotEmpty) {
+           await fetchUserProjectsAsAdmin(_ownerProjects.first.ownerId);
+        }
+        
+        return true;
+      }
+      _error = 'Status Update Failed: ${response.statusCode} - ${response.data}';
+      return false;
+    } catch (e) {
+      if (e is DioException) {
+         print('❌ Update Status DioError: ${e.response?.statusCode} - ${e.response?.data}');
+         _error = 'DioError: ${e.response?.statusCode}';
+      } else {
+         print('❌ Update Status Error: $e');
+         _error = e.toString();
+      }
       return false;
     } finally {
       _isLoading = false;

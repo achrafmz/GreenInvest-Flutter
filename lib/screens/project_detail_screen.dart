@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../models/project_model.dart';
+import '../services/auth_service.dart';
+import '../services/project_service.dart';
+import '../widgets/snackbar_helper.dart';
 
 class ProjectDetailScreen extends StatelessWidget {
   final Project project;
@@ -211,28 +215,68 @@ class ProjectDetailScreen extends StatelessWidget {
 
                     const SizedBox(height: 32),
                     
-                    // Bouton d'action
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Check if user is investor
-                          Navigator.pushNamed(context, '/investment-confirmation');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFFF9800),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    // Validation Actions (Admin Only)
+                    Consumer<AuthService>(
+                      builder: (context, authService, _) {
+                        final user = authService.currentUser;
+                        final isAdmin = user?.role.toUpperCase() == 'ADMIN';
+                        final isProjectOwner = user?.role.toUpperCase() == 'PORTEUR_PROJET';
+                        
+                        if (isAdmin && project.status == 'EN_ATTENTE') {
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _updateStatus(context, 'REJETE'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                  ),
+                                  child: const Text('Refuser'),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _updateStatus(context, 'VALIDE'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                  ),
+                                  child: const Text('Valider'),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+
+                        // Hide Invest button for Admin or Owner (optional, or keeping it for demo)
+                        if (isAdmin || isProjectOwner) return const SizedBox.shrink();
+
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/investment-confirmation');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF9800),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: const Text(
+                              'Investir maintenant',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          elevation: 2,
-                        ),
-                        child: const Text(
-                          'Investir maintenant',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -265,5 +309,18 @@ class ProjectDetailScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _updateStatus(BuildContext context, String newStatus) async {
+    final success = await context.read<ProjectService>().updateProjectStatus(project.id, newStatus);
+    
+    if (context.mounted) {
+      if (success) {
+        showTopSnackBar(context, 'Statut mis à jour: $newStatus', backgroundColor: Colors.green);
+        Navigator.pop(context); // Return to previous screen to refresh
+      } else {
+         showTopSnackBar(context, 'Erreur lors de la mise à jour', backgroundColor: Colors.red);
+      }
+    }
   }
 }

@@ -17,9 +17,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Charger les projets au démarrage de l'écran
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProjectService>().fetchProjects();
+    // Charger les projets publics au démarrage de l'écran
+    Future.microtask(() {
+      if (mounted) {
+        context.read<ProjectService>().fetchPublicProjects();
+      }
     });
   }
 
@@ -143,9 +145,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Center(child: Text('Erreur: ${projectService.error}'));
                     }
 
-                    // Filter locally for valid projects (assuming API returns all)
+                    // Filter for VALIDE projects only (validated projects ready for investment)
                     final validProjects = projectService.projects
-                        .where((p) => p.status != 'EN_ATTENTE' && p.status != 'PENDING')
+                        .where((p) => p.status?.toUpperCase() == 'VALIDE')
                         .toList();
 
                     if (validProjects.isEmpty) {
