@@ -5,52 +5,103 @@ import 'api_service.dart';
 class ProjectService extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   List<Project> _projects = [];
+  List<Project> _ownerProjects = [];
   bool _isLoading = false;
   String? _error;
 
   List<Project> get projects => _projects;
+  List<Project> get ownerProjects => _ownerProjects;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchProjects() async {
+  Future<void> fetchPublicProjects() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // TODO: Appel API réel
-      // final response = await _apiService.client.get('/projects');
-      // _projects = (response.data as List).map((p) => Project.fromJson(p)).toList();
-
-      // Simulation
-      await Future.delayed(const Duration(seconds: 1));
-      _projects = [
-        Project(
-          id: '1',
-          title: 'Ferme Solaire Souss',
-          description: 'Installation de panneaux solaires pour une coopérative agricole.',
-          targetAmount: 150000,
-          currentAmount: 45000,
-          ownerId: 'owner_1',
-          status: 'approved',
-        ),
-        Project(
-          id: '2',
-          title: 'Recyclage Plastique Rabat',
-          description: 'Unité de transformation des déchets plastiques en mobilier urbain.',
-          targetAmount: 80000,
-          currentAmount: 12000,
-          ownerId: 'owner_2',
-          status: 'pending',
-        ),
-      ];
+      final response = await _apiService.client.get('/public/projets');
+      if (response.statusCode == 200) {
+        _projects = _parseProjects(response.data);
+      } else {
+        _error = 'Erreur serveur: ${response.statusCode}';
+      }
     } catch (e) {
       _error = e.toString();
-      debugPrint('Erreur chargement projets: $e');
+      debugPrint('Erreur chargement projets publics: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> fetchOwnerProjects(String ownerId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.client.get(
+        '/porteur/mes-projets',
+        queryParameters: {'porteurId': ownerId},
+      );
+      
+      if (response.statusCode == 200) {
+        // La réponse est enveloppée dans "data"
+        final dynamic rawWrapper = response.data;
+        debugPrint('🔍 Raw Owner Projects Response: $rawWrapper'); // DEBUG LOG
+
+        List<dynamic> listData = [];
+
+        if (rawWrapper is Map && rawWrapper.containsKey('data')) {
+           final dynamic dataContent = rawWrapper['data'];
+           if (dataContent is List) {
+             listData = dataContent;
+           }
+        } else if (rawWrapper is List) {
+          listData = rawWrapper;
+        }
+
+        _ownerProjects = listData.map((json) {
+          debugPrint('Parsing project: $json'); // DEBUG LOG
+          return Project.fromJson(json);
+        }).toList();
+        
+        debugPrint('✅ Loaded ${_ownerProjects.length} owner projects');
+      } else {
+        _error = 'Erreur serveur (Owner): ${response.statusCode}';
+      }
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('Erreur chargement projets owner: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  List<Project> _parseProjects(dynamic rawData) {
+    List<dynamic> listData = [];
+    if (rawData is List) {
+      listData = rawData;
+    } else if (rawData is Map) {
+      if (rawData.containsKey('content') && rawData['content'] is List) {
+        listData = rawData['content'];
+      } else if (rawData.containsKey('data') && rawData['data'] is List) {
+          listData = rawData['data'];
+      }
+    }
+    return listData.map((json) => Project.fromJson(json)).toList();
+  }
+
+  // Ancien getter (optionnel, ou on utilise ownerProjects direct)
+  List<Project> getProjectsByOwner(String ownerId) {
+    // Si on a chargé spécifiquement les projets du owner, on les retourne directement
+    // sans revérifier l'ID (au cas où il y aurait une mismatch ou null)
+    if (_ownerProjects.isNotEmpty) {
+      return _ownerProjects;
+    }
+    return _projects.where((p) => p.ownerId == ownerId).toList();
   }
   Future<bool> createProject({
     required String nom,
@@ -82,8 +133,12 @@ class ProjectService extends ChangeNotifier {
       print('✅ Create Project Response: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Refresh list if needed (optional)
-        // await fetchProjects(); 
+        // Note: idealement on devrait repasser l'ID ici, mais createProject n'a pas l'ID.
+        // On laisse le refresh de fetchOwnerProjects à l'écran appelant ou on ajoute l'ID à createProject.
+        // Pour l'instant, update rapide pour eviter l'erreur de compilation:
+        // await fetchOwnerProjects(ownerId); -> Impossible sans l'ID.
+        // On retire le fetchOwnerProjects d'ici et on le laisse au Dashboard quand on revient.
+        await fetchPublicProjects(); 
         return true;
       }
       return false;

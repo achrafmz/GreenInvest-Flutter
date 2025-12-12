@@ -1,6 +1,7 @@
 // lib/screens/admin_dashboard.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/user_menu_button.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -34,7 +35,7 @@ class AdminDashboard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _ProfileButton(onPressed: () => Navigator.pushNamed(context, '/profile')),
+                      const UserMenuButton(),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -251,20 +252,3 @@ class AdminDashboard extends StatelessWidget {
   }
 }
 
-class _ProfileButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  const _ProfileButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onPressed,
-      icon: const CircleAvatar(
-        radius: 16,
-        backgroundColor: Colors.white,
-        child: Icon(Icons.person, color: AppColors.primary),
-      ),
-      tooltip: 'Profil',
-    );
-  }
-}

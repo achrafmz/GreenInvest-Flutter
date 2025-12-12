@@ -3,10 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
+import '../services/project_service.dart';
 import '../widgets/user_menu_button.dart';
+import 'project_detail_screen.dart';
 
-class ProjectOwnerDashboard extends StatelessWidget {
+class ProjectOwnerDashboard extends StatefulWidget {
   const ProjectOwnerDashboard({super.key});
+
+  @override
+  State<ProjectOwnerDashboard> createState() => _ProjectOwnerDashboardState();
+}
+
+class _ProjectOwnerDashboardState extends State<ProjectOwnerDashboard> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthService>();
+      if (auth.currentUser != null) {
+        context.read<ProjectService>().fetchOwnerProjects(auth.currentUser!.id);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +70,6 @@ class ProjectOwnerDashboard extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Removed custom container header
-            const SizedBox(height: 24),
             const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -102,68 +118,85 @@ class ProjectOwnerDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                itemCount: 3,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (_, index) {
-                  final List<Map<String, dynamic>> projects = [
-                    {
-                      'name': 'Parc solaire',
-                      'amount': '1,000,000 MAD',
-                      'status': 'Financé',
-                      'color': Colors.green,
-                    },
-                    {
-                      'name': 'Biomasse',
-                      'amount': '750,000 MAD',
-                      'status': 'Validé',
-                      'color': Color(0xFFFF9800),
-                    },
-                    {
-                      'name': 'Hydraulique',
-                      'amount': '1,050,000 MAD',
-                      'status': 'En attente',
-                      'color': Colors.grey,
-                    },
-                  ];
+              child: Consumer2<AuthService, ProjectService>(
+                builder: (context, auth, projectService, child) {
+                  final user = auth.currentUser;
+                  if (user == null) {
+                    return const Center(child: Text('Veuillez vous connecter.'));
+                  }
+                  
+                  // Utiliser getProjectsByOwner qui priorise maintenant la liste ownerProjects
+                  // Ou utiliser directement projectService.ownerProjects si on est sûr que l'API filtre déjà
+                  // Par prudence, on continue de filtrer par ownerId
+                  final myProjects = projectService.getProjectsByOwner(user.id);
 
-                  final project = projects[index];
-                  final String name = project['name'] as String;
-                  final String amount = project['amount'] as String;
-                  final String status = project['status'] as String;
-                  final Color color = project['color'] as Color;
+                  if (projectService.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  return Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                  if (myProjects.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'Vous n\'avez pas encore créé de projet.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    itemCount: myProjects.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (_, index) {
+                      final project = myProjects[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProjectDetailScreen(project: project),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          margin: EdgeInsets.zero,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                Text(amount, style: const TextStyle(color: Colors.grey)),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        project.title,
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        '${project.currentAmount} / ${project.targetAmount} MAD',
+                                        style: const TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue, // Améliorer la mapping couleur selon status
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    project.status ?? 'N/A',
+                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              status,
-                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

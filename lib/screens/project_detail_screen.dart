@@ -1,192 +1,265 @@
-// lib/screens/project_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../models/project_model.dart';
 
 class ProjectDetailScreen extends StatelessWidget {
-  const ProjectDetailScreen({super.key});
+  final Project project;
+
+  const ProjectDetailScreen({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {
+    // Calcul du pourcentage financé
+    final double percentage = project.targetAmount > 0 
+        ? (project.currentAmount / project.targetAmount) 
+        : 0.0;
+    final int percentageInt = (percentage * 100).toInt();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Image du projet
-            Stack(
-              children: [
-                ClipRRect(
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-                    height: 250,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Solaire',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header avec image et bouton retour
+              Stack(
                 children: [
-                  Text(
-                    'Parc solaire communautaire',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ouarzazate, Maroc',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.inputBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '75% financé',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              LinearProgressIndicator(
-                                value: 0.75,
-                                backgroundColor: Colors.grey[200],
-                                color: AppColors.primary,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '750,000 MAD',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '/ 1,000,000 MAD',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildStat('Investisseurs', '156'),
-                      _buildStat('Jours restants', '23'),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Description du projet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Installation de 500 panneaux solaires photovoltaïques sur les toits d’une zone industrielle. Ce projet permettra d’alimenter 200 foyers en énergie 100% renouvelable et de réduire les émissions de CO₂ de 300 tonnes par an.\n\nRetour sur investissement estimé: 8% par an sur 10 ans.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
+                  Image.network(
+                    'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?auto=format&fit=crop&w=800&q=80',
+                    height: 250,
                     width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/investment-confirmation');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFF9800),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 250,
+                      color: Colors.grey[300],
+                      child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
+                    ),
+                  ),
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.black),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      child: const Text(
-                        'Investir maintenant',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        project.typeContrepartie ?? 'Standard',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      project.title,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Maroc', // Placeholder car pas de champ localisation dans le modèle
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Barre de progression
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '$percentageInt% financé',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              Text(
+                                '${project.currentAmount.toStringAsFixed(0)} MAD',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          LinearProgressIndicator(
+                            value: percentage.clamp(0.0, 1.0),
+                            backgroundColor: Colors.grey[200],
+                            color: AppColors.primary,
+                            minHeight: 8,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              'sur ${project.targetAmount.toStringAsFixed(0)} MAD',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                    
+                    // Stats Grid
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatItem(Icons.people, '${project.nombreInvestisseurs ?? 0}', 'Investisseurs'),
+                        _buildStatItem(Icons.trending_up, '${project.pourcentageRendement ?? 0}%', 'Rendement'),
+                        _buildStatItem(Icons.calendar_today, '${project.dureeContrepartie ?? 0} mois', 'Durée'),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                     const Divider(),
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      'Description du projet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      project.description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[800],
+                        height: 1.6,
+                      ),
+                    ),
+                    
+                    if (project.contrepartie != null && project.contrepartie!.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Contrepartie',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.05),
+                          border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          project.contrepartie!,
+                          style: TextStyle(
+                            color: Colors.blue[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 32),
+                    
+                    // Bouton d'action
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO: Check if user is investor
+                          Navigator.pushNamed(context, '/investment-confirmation');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFF9800),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: const Text(
+                          'Investir maintenant',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStat(String label, String value) {
+  Widget _buildStatItem(IconData icon, String value, String label) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        Icon(icon, color: AppColors.primary, size: 28),
+        const SizedBox(height: 8),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             color: Colors.grey[600],
           ),
         ),
