@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/project_service.dart';
 import '../constants/app_colors.dart';
+import 'project_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Charger les projets au démarrage de l'écran
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProjectService>().fetchProjects();
+      context.read<ProjectService>().fetchPublicProjects();
     });
   }
 
@@ -137,78 +138,90 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: projectService.projects.length,
                       itemBuilder: (context, index) {
                         final project = projectService.projects[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                child: Container(
-                                  height: 120,
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: Icon(Icons.solar_power, size: 48, color: Colors.grey),
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProjectDetailScreen(project: project),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                  child: Container(
+                                    height: 120,
+                                    color: Colors.grey[200],
+                                    child: const Center(
+                                      child: Icon(Icons.solar_power, size: 48, color: Colors.grey),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      project.title,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      project.description,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    LinearProgressIndicator(
-                                      value: project.currentAmount / project.targetAmount,
-                                      backgroundColor: Colors.grey[200],
-                                      color: AppColors.primary,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '${((project.currentAmount / project.targetAmount) * 100).toInt()}% financé',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[700],
-                                          ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        project.title,
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        Text(
-                                          '${project.currentAmount.toInt()} / ${project.targetAmount.toInt()} MAD',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.primary,
-                                          ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        project.description,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
                                         ),
-                                      ],
-                                    ),
-                                  ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      LinearProgressIndicator(
+                                        value: (project.targetAmount > 0) 
+                                            ? (project.currentAmount / project.targetAmount).clamp(0.0, 1.0) 
+                                            : 0.0,
+                                        backgroundColor: Colors.grey[200],
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${(project.targetAmount > 0 ? (project.currentAmount / project.targetAmount * 100).toInt() : 0)}% financé',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          Text(
+                                            '${project.currentAmount.toInt()} / ${project.targetAmount.toInt()} MAD',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       },

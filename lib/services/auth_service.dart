@@ -528,4 +528,62 @@ class AuthService extends ChangeNotifier {
       return true;
     }
   }
+  /// Récupérer tous les utilisateurs (Admin seulement)
+  Future<List<User>> fetchAllUsers() async {
+    try {
+      final response = await _apiService.client.get('/users');
+
+      if (response.statusCode == 200) {
+        final rawData = response.data;
+        List<dynamic> listData = [];
+
+        if (rawData is Map && rawData.containsKey('data') && rawData['data'] is List) {
+          listData = rawData['data'];
+        } else if (rawData is List) {
+          listData = rawData;
+        } else if (rawData is Map && rawData.containsKey('content') && rawData['content'] is List) {
+           listData = rawData['content'];
+        }
+
+        return listData.map((e) => User.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('❌ fetchAllUsers failed: $e');
+      throw e;
+    }
+  }
+
+  /// Créer un admin via le endpoint dédié
+  Future<bool> createAdmin({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final data = {
+        'username': username,
+        'email': email,
+        'password': password,
+        'role': 'ADMIN',
+      };
+
+      // Utiliser le client authentifié car c'est une action admin
+      final response = await _apiService.client.post('/admin/create', data: data);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('❌ createAdmin failed: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

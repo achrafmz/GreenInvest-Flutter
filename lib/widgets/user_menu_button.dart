@@ -22,15 +22,19 @@ class UserMenuButton extends StatelessWidget {
           onSelected: (value) {
             switch (value) {
               case 'profile':
-                // Note: Ensure /profile route is defined or handle error
                 Navigator.pushNamed(context, '/profile');
                 break;
               case 'investments':
                 Navigator.pushNamed(context, '/my-investments');
                 break;
               case 'projects':
-                // Assuming dashboard is the main project view for owners
                 Navigator.pushNamed(context, '/dashboard');
+                break;
+              case 'admin_projects':
+                Navigator.pushNamed(context, '/pending-projects');
+                break;
+              case 'users':
+                Navigator.pushNamed(context, '/admin-users');
                 break;
               case 'logout':
                 authService.logout();
@@ -40,11 +44,10 @@ class UserMenuButton extends StatelessWidget {
           },
           itemBuilder: (BuildContext context) {
             final role = user?.role ?? '';
-            // Robust check for roles (case-insensitive and handling variations)
-            // Using includes/contains for safety if role strings vary
             final roleLower = role.toLowerCase();
             final isInvestor = roleLower.contains('investisseur') || roleLower.contains('investor');
             final isProjectOwner = roleLower.contains('porteur') || roleLower.contains('project_owner');
+            final isAdmin = roleLower.contains('admin');
 
             return [
               const PopupMenuItem(
@@ -64,7 +67,7 @@ class UserMenuButton extends StatelessWidget {
                     children: [
                       Icon(Icons.monetization_on, color: AppColors.textPrimary),
                       SizedBox(width: 8),
-                      Text('Investissement'),
+                      Text('Investissements'),
                     ],
                   ),
                 ),
@@ -79,13 +82,35 @@ class UserMenuButton extends StatelessWidget {
                     ],
                   ),
                 ),
+              if (isAdmin) ...[
+                const PopupMenuItem(
+                  value: 'users',
+                  child: Row(
+                    children: [
+                      Icon(Icons.group, color: AppColors.textPrimary),
+                      SizedBox(width: 8),
+                      Text('Utilisateurs'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'admin_projects',
+                  child: Row(
+                    children: [
+                      Icon(Icons.list_alt, color: AppColors.textPrimary),
+                      SizedBox(width: 8),
+                      Text('Projets'),
+                    ],
+                  ),
+                ),
+              ],
               const PopupMenuItem(
                 value: 'logout',
                 child: Row(
                   children: [
                     Icon(Icons.logout, color: Colors.red),
                     SizedBox(width: 8),
-                    Text('Log out', style: TextStyle(color: Colors.red)),
+                    Text('Se déconnecter', style: TextStyle(color: Colors.red)),
                   ],
                 ),
               ),
