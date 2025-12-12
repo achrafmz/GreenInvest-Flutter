@@ -59,10 +59,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       if (success) {
-        showTopSnackBar(context, 'Profil mis à jour avec succès', backgroundColor: Colors.green);
+        showTopSnackBar(context, 'Profil mis à jour avec succès');
         setState(() => _isEditing = false);
       } else {
-        showTopSnackBar(context, 'Erreur lors de la mise à jour', backgroundColor: Colors.red);
+        showTopSnackBar(context, 'Erreur lors de la mise à jour', isError: true);
       }
     }
   }

@@ -316,10 +316,10 @@ class ProjectDetailScreen extends StatelessWidget {
     
     if (context.mounted) {
       if (success) {
-        showTopSnackBar(context, 'Statut mis à jour: $newStatus', backgroundColor: Colors.green);
+        showTopSnackBar(context, 'Statut mis à jour: $newStatus');
         Navigator.pop(context); // Return to previous screen to refresh
       } else {
-         showTopSnackBar(context, 'Erreur lors de la mise à jour', backgroundColor: Colors.red);
+         showTopSnackBar(context, 'Erreur lors de la mise à jour', isError: true);
       }
     }
   }
