@@ -58,12 +58,15 @@ class _AuthScreenState extends State<AuthScreen> {
       final success = await authService.login(username, password);
       if (success && mounted) {
         final user = authService.currentUser;
-        if (user?.role == 'project_owner') {
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        } else if (user?.role == 'admin') {
+        final roleLower = user?.role?.toLowerCase() ?? '';
+        
+        // Admin → Dashboard Admin
+        if (roleLower.contains('admin')) {
           Navigator.pushReplacementNamed(context, '/admin-dashboard');
-        } else {
-          Navigator.pushReplacementNamed(context, '/investor-dashboard');
+        } 
+        // Tous les autres (investisseur, porteur) → Page d'accueil avec projets publics
+        else {
+          Navigator.pushReplacementNamed(context, '/');
         }
       } else if (mounted) {
         showTopSnackBar(context, 'Échec de la connexion. Vérifiez vos identifiants.', isError: true);

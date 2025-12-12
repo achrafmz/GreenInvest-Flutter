@@ -10,7 +10,7 @@ import 'screens/create_project_screen.dart';
 import 'screens/investor_dashboard.dart';
 
 import 'screens/my_investments_screen.dart';
-import 'screens/admin_dashboard.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/pending_projects_screen.dart';
 import 'screens/admin_users_screen.dart';
 import 'screens/investment_confirmation_screen.dart';
@@ -53,7 +53,7 @@ class MyApp extends StatelessWidget {
         '/investor-dashboard': (context) => const InvestorDashboard(),
 
         '/my-investments': (context) => const MyInvestmentsScreen(),
-        '/admin-dashboard': (context) => const AdminDashboard(),
+        '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/admin-users': (context) => const AdminUsersScreen(),
         '/pending-projects': (context) => const PendingProjectsScreen(),
         '/investment-confirmation': (context) => const InvestmentConfirmationScreen(),
