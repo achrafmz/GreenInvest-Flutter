@@ -9,29 +9,23 @@ class MyInvestmentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Mes investissements'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        centerTitle: false,
+      ),
       body: SafeArea(
         child: Column(
           children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Column(
+              color: AppColors.primary,
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Mes investissements',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
+                   Text(
                     'Total investi: 155,000 MAD',
                     style: TextStyle(
                       fontSize: 16,

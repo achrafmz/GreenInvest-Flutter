@@ -1,5 +1,8 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'services/auth_service.dart';
+import 'services/project_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/project_owner_dashboard.dart';
@@ -10,9 +13,18 @@ import 'screens/my_investments_screen.dart';
 import 'screens/admin_dashboard.dart';
 import 'screens/pending_projects_screen.dart';
 import 'screens/investment_confirmation_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => ProjectService()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -30,7 +42,11 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
-        '/auth': (context) => const AuthScreen(),
+        '/auth': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          final isSignup = args is bool ? args : false;
+          return AuthScreen(initialIsSignup: isSignup);
+        },
         '/dashboard': (context) => const ProjectOwnerDashboard(),
         '/create-project': (context) => const CreateProjectScreen(),
         '/investor-dashboard': (context) => const InvestorDashboard(),
@@ -39,6 +55,7 @@ class MyApp extends StatelessWidget {
         '/admin-dashboard': (context) => const AdminDashboard(),
         '/pending-projects': (context) => const PendingProjectsScreen(),
         '/investment-confirmation': (context) => const InvestmentConfirmationScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }

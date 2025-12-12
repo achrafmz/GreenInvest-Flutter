@@ -1,51 +1,107 @@
 // lib/screens/auth_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
+import '../widgets/snackbar_helper.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  final bool initialIsSignup;
+  
+  const AuthScreen({super.key, this.initialIsSignup = false});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  bool _isLoginMode = true;
+  late bool _isLoginMode;
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _selectedRole = 'Investisseur'; // Par défaut
+  String _selectedRole = 'Investisseur';
+
+  @override
+  void initState() {
+    super.initState();
+    _isLoginMode = !widget.initialIsSignup;
+  }
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _handleAuth() {
+  void _handleAuth() async {
+    final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez remplir tous les champs')),
-      );
+    // Validation
+    if (username.isEmpty || password.isEmpty) {
+      showTopSnackBar(context, 'Nom d\'utilisateur et mot de passe requis');
       return;
     }
 
+    if (!_isLoginMode && email.isEmpty) {
+      showTopSnackBar(context, 'L\'email est requis pour l\'inscription');
+      return;
+    }
+
+    final authService = context.read<AuthService>();
+
     if (_isLoginMode) {
-      print('CONNEXION → Email: $email');
-      Navigator.pushReplacementNamed(context, '/');
+      // ✅ LOGIN via USERNAME
+      final success = await authService.login(username, password);
+      if (success && mounted) {
+        final user = authService.currentUser;
+        if (user?.role == 'project_owner') {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else if (user?.role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin-dashboard');
+        } else {
+          Navigator.pushReplacementNamed(context, '/investor-dashboard');
+        }
+      } else if (mounted) {
+        showTopSnackBar(context, 'Échec de la connexion. Vérifiez vos identifiants.');
+      }
     } else {
-      print('INSCRIPTION → Email: $email, Rôle: $_selectedRole');
-      if (_selectedRole == 'Investisseur') {
-        Navigator.pushReplacementNamed(context, '/investor-dashboard');
-      } else if (_selectedRole == 'Porteur de projet') {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+      // ✅ SIGNUP
+      String backendRole = 'INVESTISSEUR';
+      if (_selectedRole == 'Porteur de projet') {
+        backendRole = 'PORTEUR_PROJET';
       } else if (_selectedRole == 'Administrateur') {
-        Navigator.pushReplacementNamed(context, '/admin-dashboard');
-      } else {
-        Navigator.pushReplacementNamed(context, '/');
+        backendRole = 'ADMIN';
+      }
+
+      final result = await authService.signup(
+        username: username,
+        email: email,
+        password: password,
+        role: backendRole,
+      );
+
+      if (mounted) {
+        if (result['success'] == true) {
+          showTopSnackBar(
+            context,
+            result['message'] ?? 'Inscription réussie ! Veuillez vous connecter.',
+            backgroundColor: Colors.green,
+          );
+          setState(() {
+            _isLoginMode = true;
+          });
+        } else {
+          showTopSnackBar(
+            context,
+            result['message'] ?? 'Erreur lors de l\'inscription.',
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          );
+        }
       }
     }
   }
@@ -76,7 +132,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Toggle
+              // Toggle Connexion / Créer un compte
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.inputBg,
@@ -139,16 +195,27 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Email
+              // ✅ USERNAME (Toujours visible et en PREMIER)
               _buildTextField(
-                label: 'Email',
-                controller: _emailController,
-                icon: Icons.email,
-                hintText: 'votre@email.com',
+                label: 'Nom d\'utilisateur',
+                controller: _usernameController,
+                icon: Icons.person,
+                hintText: 'john_doe',
               ),
               const SizedBox(height: 24),
 
-              // Mot de passe
+              // ✅ EMAIL (Uniquement pour SIGNUP)
+              if (!_isLoginMode) ...[
+                _buildTextField(
+                  label: 'Email',
+                  controller: _emailController,
+                  icon: Icons.email,
+                  hintText: 'votre@email.com',
+                ),
+                const SizedBox(height: 24),
+              ],
+
+              // ✅ PASSWORD (Toujours visible)
               _buildTextField(
                 label: 'Mot de passe',
                 controller: _passwordController,
@@ -157,7 +224,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 obscureText: true,
               ),
 
-              // ✅ RÔLE : uniquement en mode INSCRIPTION
+              // ✅ RÔLE (Uniquement pour SIGNUP)
               if (!_isLoginMode) ...[
                 const SizedBox(height: 24),
                 _buildRoleDropdown(),
@@ -165,27 +232,33 @@ class _AuthScreenState extends State<AuthScreen> {
 
               const Spacer(),
 
-              // Bouton
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _handleAuth,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    _isLoginMode ? 'Se connecter' : 'Créer un compte',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              // Bouton d'action
+              Consumer<AuthService>(
+                builder: (context, auth, child) {
+                  return auth.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _handleAuth,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              _isLoginMode ? 'Se connecter' : 'Créer un compte',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                },
               ),
             ],
           ),
@@ -245,7 +318,6 @@ class _AuthScreenState extends State<AuthScreen> {
             DropdownMenuItem(value: 'Investisseur', child: Text('Investisseur')),
             DropdownMenuItem(
                 value: 'Porteur de projet', child: Text('Porteur de projet')),
-            DropdownMenuItem(value: 'Administrateur', child: Text('Administrateur')),
           ],
         ),
       ],

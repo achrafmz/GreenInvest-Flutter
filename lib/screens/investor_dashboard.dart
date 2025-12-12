@@ -1,6 +1,7 @@
 // lib/screens/investor_dashboard.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/user_menu_button.dart';
 
 class InvestorDashboard extends StatelessWidget {
   const InvestorDashboard({super.key});
@@ -23,13 +24,20 @@ class InvestorDashboard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Projets disponibles',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Projets disponibles',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const UserMenuButton(),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -264,3 +272,4 @@ class InvestorDashboard extends StatelessWidget {
     );
   }
 }
+

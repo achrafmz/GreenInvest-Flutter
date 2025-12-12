@@ -1,9 +1,24 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/project_service.dart';
 import '../constants/app_colors.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Charger les projets au démarrage de l'écran
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProjectService>().fetchProjects();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +55,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Boutons Se connecter / S'inscrire
+              // Boutons Se connecter / S'inscrire (gardé pour la démo, à adapter si connecté)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -66,7 +81,11 @@ class HomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/auth');
+                    Navigator.pushReplacementNamed(
+                      context, 
+                      '/auth',
+                      arguments: true, // true = mode inscription
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
@@ -98,97 +117,104 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Carte projet
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: Image.network(
-                        'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-                        height: 180,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 180,
-                          color: Colors.grey[200],
-                          child: const Center(child: Text('Image indisponible')),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Parc solaire communautaire',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+              // Liste des projets
+              Expanded(
+                child: Consumer<ProjectService>(
+                  builder: (context, projectService, child) {
+                    if (projectService.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (projectService.error != null) {
+                      return Center(child: Text('Erreur: ${projectService.error}'));
+                    }
+
+                    if (projectService.projects.isEmpty) {
+                      return const Center(child: Text('Aucun projet disponible.'));
+                    }
+
+                    return ListView.builder(
+                      itemCount: projectService.projects.length,
+                      itemBuilder: (context, index) {
+                        final project = projectService.projects[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Ouarzazate, Maroc',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          LinearProgressIndicator(
-                            value: 0.75,
-                            backgroundColor: Colors.grey[200],
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '75% financé',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                child: Container(
+                                  height: 120,
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: Icon(Icons.solar_power, size: 48, color: Colors.grey),
+                                  ),
                                 ),
                               ),
-                              Text(
-                                '75,000 MAD / 100,000 MAD',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      project.title,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      project.description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    LinearProgressIndicator(
+                                      value: project.currentAmount / project.targetAmount,
+                                      backgroundColor: Colors.grey[200],
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${((project.currentAmount / project.targetAmount) * 100).toInt()}% financé',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        Text(
+                                          '${project.currentAmount.toInt()} / ${project.targetAmount.toInt()} MAD',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        );
+                      },
+                    );
+                  },
                 ),
-              ),
-
-              const Spacer(),
-
-              // Pagination ou flèches (optionnel — tu peux ajouter un carousel plus tard)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.grey),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
-                  ),
-                ],
               ),
             ],
           ),
