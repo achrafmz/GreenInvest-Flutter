@@ -107,10 +107,22 @@ class AuthService extends ChangeNotifier {
         try {
           final responseMe = await _apiService.client.get('/users/me');
           if (responseMe.statusCode == 200) {
-            _currentUser = User.fromJson(responseMe.data);
-            _debugStatus = 'Found API (Me)';
-            notifyListeners();
-            return;
+            dynamic userData = responseMe.data;
+            if (userData is Map && userData.containsKey('data')) {
+              userData = userData['data'];
+            }
+            
+            final tempUser = User.fromJson(userData);
+            
+            // Validation: Si Investisseur sans solde, on considère l'info incomplète -> Fallback liste
+            if (tempUser.role == 'INVESTISSEUR' && tempUser.solde == null) {
+               print('⚠️ /users/me returned INVESTISSEUR without solde. Falling back to list.');
+            } else {
+               _currentUser = tempUser;
+               _debugStatus = 'Found API (Me)';
+               notifyListeners();
+               return;
+            }
           }
         } catch (e) {
           print('⚠️ GET /users/me failed: $e. Falling back to list search.');
@@ -156,7 +168,11 @@ class AuthService extends ChangeNotifier {
            try {
              final responseMe = await _apiService.client.get('/users/$userId');
              if (responseMe.statusCode == 200) {
-               _currentUser = User.fromJson(responseMe.data);
+               dynamic userData = responseMe.data;
+               if (userData is Map && userData.containsKey('data')) {
+                 userData = userData['data'];
+               }
+               _currentUser = User.fromJson(userData);
                _debugStatus = 'Found API (Direct)';
                notifyListeners();
              }
@@ -252,38 +268,82 @@ class AuthService extends ChangeNotifier {
 
 
   /// Mettre à jour le profil utilisateur
-  Future<bool> updateProfile({
-    required String id,
-    required String username,
-    required String email,
-    double? solde,
-  }) async {
-    _isLoading = true;
-    notifyListeners();
+  /// Mettre à jour le profil utilisateur
+Future<bool> updateProfile({
+  String? id, // ✅ Optionnel maintenant car /users/me n'en a pas besoin
+  required String username,
+  required String email,
+  double? solde,
+}) async {
+  _isLoading = true;
+  notifyListeners();
 
-    try {
-      final Map<String, dynamic> data = {
-        'username': username,
-        'email': email,
-      };
+  try {
+    final Map<String, dynamic> data = {
+      'username': username,
+      'email': email,
+    };
 
-      if (solde != null) {
-        data['solde'] = solde;
+    // ✅ Ajouter le solde uniquement s'il est fourni (pour les investisseurs)
+    if (solde != null) {
+      data['solde'] = solde;
+    }
+
+    print('📤 Sending update to /users/me with data: $data');
+
+    // ✅ L'endpoint /users/me identifie l'utilisateur via le token
+    final response = await _apiService.client.put(
+      '/users/me',
+      data: data,
+    );
+
+    print('📝 Update Profile Response: ${response.statusCode}');
+    print('📝 Response Data: ${response.data}');
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      print('✅ API Status OK. Parsing data...');
+      
+      dynamic responseData = response.data;
+      
+      // Déballer si la réponse est encapsulée dans un wrapper
+      if (responseData is Map && responseData.containsKey('data')) {
+        responseData = responseData['data'];
+        print('📦 Unwrapped Data: $responseData');
       }
 
-      final response = await _apiService.client.put(
-        '/users/me',
-        data: data,
-      );
+      try {
+        if (responseData is Map<String, dynamic> && responseData.containsKey('id')) {
+          // ✅ Mise à jour avec les données complètes du serveur
+          _currentUser = User.fromJson(responseData);
+          print('✅ User updated from API: ${_currentUser?.username}, Role: ${_currentUser?.role}, Solde: ${_currentUser?.solde}');
+        } else {
+          print('⚠️ Response does not contain full user object. Using local fallback.');
+          // Fallback : Mise à jour locale
+          _currentUser = User(
+            id: _currentUser?.id ?? id ?? '',
+            username: username,
+            email: email,
+            role: _currentUser?.role ?? '',
+            solde: solde ?? _currentUser?.solde,
+            keycloakUserId: _currentUser?.keycloakUserId,
+            dateInscription: _currentUser?.dateInscription,
+          );
+        }
+        
+        // ✅ SÉCURITÉ: Si investisseur sans solde, recharger le profil complet
+        if (_currentUser?.role == 'INVESTISSEUR' && _currentUser?.solde == null) {
+          print('⚠️ Investisseur without solde detected. Refetching profile...');
+          await _fetchCurrentUser();
+        }
 
-      print('📝 Update Profile Response: ${response.statusCode}');
-      print('📝 Response Data: ${response.data}');
-
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        // Rafraîchir l'utilisateur localement
-        // Idéalement, l'API renvoie l'objet mis à jour
+        notifyListeners();
+        return true;
+        
+      } catch (parseError) {
+        print('❌ JSON Parse Error: $parseError');
+        // Même si le parsing échoue, la mise à jour backend a réussi (200 OK)
         _currentUser = User(
-          id: id, // On garde l'ID qu'on avait
+          id: _currentUser?.id ?? id ?? '',
           username: username,
           email: email,
           role: _currentUser?.role ?? '',
@@ -291,21 +351,33 @@ class AuthService extends ChangeNotifier {
           keycloakUserId: _currentUser?.keycloakUserId,
           dateInscription: _currentUser?.dateInscription,
         );
+        notifyListeners();
         return true;
       }
-      return false;
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-         print('❌ Correction error (API): ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-         print('❌ Correction error: $e');
-      }
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
     }
+    
+    print('❌ Unexpected status code: ${response.statusCode}');
+    return false;
+    
+  } catch (e) {
+    if (e is DioException && e.response != null) {
+      print('❌ Update error (API): ${e.response?.statusCode}');
+      print('❌ Response Body: ${e.response?.data}');
+      
+      // Afficher les erreurs de validation Spring Boot
+      if (e.response?.data is Map) {
+        final errors = e.response?.data['errors'] ?? e.response?.data['message'];
+        print('❌ Validation errors: $errors');
+      }
+    } else {
+      print('❌ Update error: $e');
+    }
+    return false;
+  } finally {
+    _isLoading = false;
+    notifyListeners();
   }
+}
 
   /// Inscription (signup) - VERSION FINALE CORRIGÉE
   Future<Map<String, dynamic>> signup({

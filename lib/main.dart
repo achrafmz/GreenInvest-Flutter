@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'services/project_service.dart';
+import 'services/investment_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/project_owner_dashboard.dart';
@@ -10,7 +11,7 @@ import 'screens/create_project_screen.dart';
 import 'screens/investor_dashboard.dart';
 
 import 'screens/my_investments_screen.dart';
-import 'screens/admin_dashboard.dart';
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/pending_projects_screen.dart';
 import 'screens/admin_users_screen.dart';
 import 'screens/investment_confirmation_screen.dart';
@@ -22,6 +23,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => ProjectService()),
+        ChangeNotifierProvider(create: (_) => InvestmentService()),
       ],
       child: const MyApp(),
     ),
@@ -53,10 +55,10 @@ class MyApp extends StatelessWidget {
         '/investor-dashboard': (context) => const InvestorDashboard(),
 
         '/my-investments': (context) => const MyInvestmentsScreen(),
-        '/admin-dashboard': (context) => const AdminDashboard(),
+        '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/admin-users': (context) => const AdminUsersScreen(),
         '/pending-projects': (context) => const PendingProjectsScreen(),
-        '/investment-confirmation': (context) => const InvestmentConfirmationScreen(),
+        // '/investment-confirmation': (context) => const InvestmentConfirmationScreen(), // Removed: dynamic navigation used
         '/profile': (context) => const ProfileScreen(),
       },
     );

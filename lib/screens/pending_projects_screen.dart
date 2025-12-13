@@ -33,7 +33,14 @@ class _PendingProjectsScreenState extends State<PendingProjectsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _loadProjects());
+    // Récupérer le statut initial depuis les arguments de navigation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is String && _statusOptions.contains(args)) {
+        setState(() => _selectedStatus = args);
+      }
+      _loadProjects();
+    });
   }
 
   Future<void> _loadProjects() async {

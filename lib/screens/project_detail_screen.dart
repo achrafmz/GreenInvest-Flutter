@@ -5,6 +5,9 @@ import '../models/project_model.dart';
 import '../services/auth_service.dart';
 import '../services/project_service.dart';
 import '../widgets/snackbar_helper.dart';
+import '../widgets/investment_dialog.dart';
+import '../services/investment_service.dart';
+import 'investment_confirmation_screen.dart';
 
 class ProjectDetailScreen extends StatelessWidget {
   final Project project;
@@ -258,9 +261,33 @@ class ProjectDetailScreen extends StatelessWidget {
                         return SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/investment-confirmation');
+                            onPressed: () async {
+                              // Navigator.pushNamed(context, '/investment-confirmation');
+                              // NEW LOGIC: Open Dialog
+                              // Check if user is logged in (should be, to see this)
+                              
+                              final result = await showDialog<double>(
+                                context: context,
+                                builder: (context) => InvestmentDialog(
+                                  projectId: project.id,
+                                  projectName: project.title,
+                                  projectRoi: project.pourcentageRendement ?? 0.0,
+                                ),
+                              );
+
+                              if (result != null && context.mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => InvestmentConfirmationScreen(
+                                      amount: result,
+                                      projectName: project.title,
+                                    ),
+                                  ),
+                                );
+                              }
                             },
+                        // ... existing style ...
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFF9800),
                               foregroundColor: Colors.white,
