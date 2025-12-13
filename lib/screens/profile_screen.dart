@@ -50,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user == null) return;
 
       final success = await auth.updateProfile(
-        id: user.id,
+        // id: user.id,  // ✅ Plus nécessaire avec /users/me
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         solde: _isInvestor ? double.tryParse(_soldeController.text) : null,

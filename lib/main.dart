@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'services/project_service.dart';
+import 'services/investment_service.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/project_owner_dashboard.dart';
@@ -22,6 +23,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => ProjectService()),
+        ChangeNotifierProvider(create: (_) => InvestmentService()),
       ],
       child: const MyApp(),
     ),
@@ -56,7 +58,7 @@ class MyApp extends StatelessWidget {
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/admin-users': (context) => const AdminUsersScreen(),
         '/pending-projects': (context) => const PendingProjectsScreen(),
-        '/investment-confirmation': (context) => const InvestmentConfirmationScreen(),
+        // '/investment-confirmation': (context) => const InvestmentConfirmationScreen(), // Removed: dynamic navigation used
         '/profile': (context) => const ProfileScreen(),
       },
     );

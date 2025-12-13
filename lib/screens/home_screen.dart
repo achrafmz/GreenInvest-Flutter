@@ -147,10 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Center(child: Text('Erreur: ${projectService.error}'));
                     }
 
-                    // Filter for VALIDE projects only (validated projects ready for investment)
-                    final validProjects = projectService.projects
-                        .where((p) => p.status?.toUpperCase() == 'VALIDE')
-                        .toList();
+                    // Afficher TOUS les projets récupérés du backend
+                    final validProjects = projectService.projects;
 
                     if (validProjects.isEmpty) {
                       return const Center(child: Text('Aucun projet disponible.'));

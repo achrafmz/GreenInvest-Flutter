@@ -4,7 +4,14 @@ import '../constants/app_colors.dart';
 import '../widgets/snackbar_helper.dart';
 
 class InvestmentConfirmationScreen extends StatelessWidget {
-  const InvestmentConfirmationScreen({super.key});
+  final double amount;
+  final String projectName;
+
+  const InvestmentConfirmationScreen({
+    super.key, 
+    required this.amount, 
+    required this.projectName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +26,7 @@ class InvestmentConfirmationScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Text(
-              'Parc solaire communautaire',
+              projectName.length > 20 ? '${projectName.substring(0, 20)}...' : projectName,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -46,16 +53,16 @@ class InvestmentConfirmationScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Montant minimum',
+                          'Montant investi',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[700],
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '1,000 MAD',
-                          style: TextStyle(
+                        Text(
+                          '${amount.toStringAsFixed(2)} MAD',
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -66,15 +73,15 @@ class InvestmentConfirmationScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Retour estimé',
+                          'Statut',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[700],
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '8% / an',
+                         const Text(
+                          'Confirmé',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -125,7 +132,7 @@ class InvestmentConfirmationScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Votre investissement de 10,000 MAD a été confirmé avec succès.',
+                          'Votre investissement de ${amount.toStringAsFixed(2)} MAD a été confirmé avec succès.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
@@ -137,7 +144,8 @@ class InvestmentConfirmationScreen extends StatelessWidget {
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              showTopSnackBar(context, 'Contrat téléchargé !');
+                              // TODO: Implement actual PDF download if backend provides URL
+                              showTopSnackBar(context, 'Téléchargement du contrat...');
                             },
                             icon: const Icon(Icons.download, size: 16),
                             label: const Text('Télécharger le contrat PDF'),

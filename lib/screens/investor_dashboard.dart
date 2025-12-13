@@ -1,10 +1,37 @@
 // lib/screens/investor_dashboard.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../widgets/user_menu_button.dart';
+import '../services/project_service.dart';
+import 'project_detail_screen.dart';
 
-class InvestorDashboard extends StatelessWidget {
+class InvestorDashboard extends StatefulWidget {
   const InvestorDashboard({super.key});
+
+  @override
+  State<InvestorDashboard> createState() => _InvestorDashboardState();
+}
+
+class _InvestorDashboardState extends State<InvestorDashboard> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => 
+      context.read<ProjectService>().fetchPublicProjects()
+    );
+  }
+
+  String _getProjectImage(String type) {
+    if (type.toLowerCase().contains('solaire')) {
+      return 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?auto=format&fit=crop&w=800&q=80';
+    } else if (type.toLowerCase().contains('eolien') || type.toLowerCase().contains('éolien')) {
+      return 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80';
+    } else if (type.toLowerCase().contains('hydraulique')) {
+      return 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf340?auto=format&fit=crop&w=800&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=800&q=80';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,173 +101,180 @@ class InvestorDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                itemCount: 3,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (_, index) {
-                  final projects = [
-                    {
-                      'title': 'Parc solaire communautaire',
-                      'description': 'Installation de 500 panneaux solaires pour alimenter 200 foyers en énergie propre.',
-                      'location': 'Ouarzazate, Maroc',
-                      'progress': 75,
-                      'amount': '75,000 MAD / 100,000 MAD',
-                      'type': 'Solaire',
-                      'image': 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-                    },
-                    {
-                      'title': 'Parc éolien côtier',
-                      'description': 'Parc éolien de 10 turbines pour produire 5 MW d’électricité renouvelable.',
-                      'location': 'Essaouira, Maroc',
-                      'progress': 40,
-                      'amount': '40,000 MAD / 100,000 MAD',
-                      'type': 'Éolien',
-                      'image': 'https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-                    },
-                    {
-                      'title': 'Mini-centrale hydraulique',
-                      'description': 'Petite centrale hydroélectrique sur un cours d’eau local pour fournir de l’énergie aux villages environnants.',
-                      'location': 'Azilal, Maroc',
-                      'progress': 20,
-                      'amount': '20,000 MAD / 100,000 MAD',
-                      'type': 'Hydraulique',
-                      'image': 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf340?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-                    },
-                  ];
+              child: Consumer<ProjectService>(
+                builder: (context, projectService, child) {
+                  if (projectService.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  final project = projects[index];
+                  if (projectService.projects.isEmpty) {
+                    return const Center(child: Text('Aucun projet disponible'));
+                  }
 
-                  return Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                              child: Image.network(
-                                project['image'] as String,
-                                height: 180,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  height: 180,
-                                  color: Colors.grey[200],
-                                  child: const Center(child: Text('Image indisponible')),
-                                ),
-                              ),
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    itemCount: projectService.projects.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (_, index) {
+                      final project = projectService.projects[index];
+                      final progress = (project.targetAmount > 0) 
+                          ? (project.currentAmount / project.targetAmount) 
+                          : 0.0;
+                      
+                      // Déterminer le type pour l'image (logique simple pour l'instant)
+                      final type = project.description.toLowerCase().contains('eolien') ? 'Éolien' : 'Solaire';
+
+                      return GestureDetector(
+                        onTap: () {
+                           Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProjectDetailScreen(project: project),
                             ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  project['type'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          );
+                        },
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                project['title'] as String,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                project['description'] as String,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                project['location'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              LinearProgressIndicator(
-                                value: (project['progress'] as int) / 100,
-                                backgroundColor: Colors.grey[200],
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              Stack(
                                 children: [
-                                  Text(
-                                    '${project['progress']}% financé',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[700],
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                    child: Image.network(
+                                      _getProjectImage(project.description),
+                                      height: 180,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        height: 180,
+                                        width: double.infinity,
+                                        color: Colors.grey[200],
+                                        child: const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
+                                      ),
                                     ),
                                   ),
-                                  Text(
-                                    project['amount'] as String,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        project.status,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, '/project-detail');
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.primary,
-                                    side: BorderSide(color: AppColors.primary),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      project.title,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Text('Voir plus'),
-                                      SizedBox(width: 8),
-                                      Icon(Icons.arrow_forward_ios, size: 16),
-                                    ],
-                                  ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      project.description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    /*
+                                    Text(
+                                      project['location'] as String,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    */
+                                    LinearProgressIndicator(
+                                      value: progress,
+                                      backgroundColor: Colors.grey[200],
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${(progress * 100).toStringAsFixed(1)}% financé',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        Text(
+                                          '${project.currentAmount} / ${project.targetAmount} MAD',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ProjectDetailScreen(project: project),
+                                            ),
+                                          );
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: AppColors.primary,
+                                          side: BorderSide(color: AppColors.primary),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: const [
+                                            Text('Voir plus'),
+                                            SizedBox(width: 8),
+                                            Icon(Icons.arrow_forward_ios, size: 16),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
