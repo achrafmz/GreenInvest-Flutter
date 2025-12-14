@@ -5,6 +5,7 @@ import '../widgets/user_menu_button.dart';
 
 import 'package:provider/provider.dart';
 import '../services/investment_service.dart';
+import 'investment_detail_screen.dart';
 
 class MyInvestmentsScreen extends StatefulWidget {
   const MyInvestmentsScreen({super.key});
@@ -104,30 +105,48 @@ class _MyInvestmentsScreenState extends State<MyInvestmentsScreen> {
                                 side: BorderSide(color: Colors.grey[200]!),
                               ),
                               elevation: 0,
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
-                                leading: CircleAvatar(
-                                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                                  child: const Icon(Icons.solar_power, color: AppColors.primary),
-                                ),
-                                title: Text(
-                                  investment.nomProjet,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Text('Date: $formattedDate'),
-                                    Text('Contrat: ${investment.numeroContrat}'),
-                                  ],
-                                ),
-                                trailing: Text(
-                                  '${investment.amount.toStringAsFixed(0)} MAD',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                    fontSize: 16,
+                              child: InkWell( // Use InkWell for ripple effect on tap
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => InvestmentDetailScreen(investment: investment),
+                                    ),
+                                  );
+                                },
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16),
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                                    child: const Icon(Icons.solar_power, color: AppColors.primary),
+                                  ),
+                                  title: Text(
+                                    investment.nomProjet,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Text('Date: $formattedDate'),
+                                      Text('Contrat: ${investment.numeroContrat}'),
+                                    ],
+                                  ),
+                                  trailing: Column( // Use Column to align trailing properly if needed, or just Text
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                       Text(
+                                        '${investment.amount.toStringAsFixed(0)} MAD',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                                    ],
                                   ),
                                 ),
                               ),

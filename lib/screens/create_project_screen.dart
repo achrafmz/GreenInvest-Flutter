@@ -1,7 +1,9 @@
-// lib/screens/create_project_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import '../constants/app_colors.dart';
 import '../services/project_service.dart';
 import '../widgets/snackbar_helper.dart';
@@ -24,10 +26,14 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   final _dureeController = TextEditingController();
   String _typeContrepartie = 'POURCENTAGE_BENEFICES';
 
+  XFile? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void dispose() {
     _nomController.dispose();
     _descController.dispose();
+    // ... (rest of dispose)
     _montantController.dispose();
     _contrepartieController.dispose();
     _rendementController.dispose();
@@ -35,11 +41,21 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = image;
+      });
+    }
+  }
+
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final service = context.read<ProjectService>();
       
-      final success = await service.createProject(
+      // Etape 1: Créer le projet
+      final projectId = await service.createProject(
         nom: _nomController.text.trim(),
         description: _descController.text.trim(),
         montantObjectif: double.parse(_montantController.text),
@@ -51,12 +67,27 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
       if (!mounted) return;
 
-      if (success) {
-        showTopSnackBar(context, 'Projet créé avec succès !');
-        Navigator.pop(context);
-        // Optionnel : Recharger le dashboard
+      if (projectId != null) {
+        bool imageSuccess = true;
+
+        // Etape 2: Upload de l'image (si sélectionnée)
+        if (_selectedImage != null) {
+          showTopSnackBar(context, 'Projet créé. Upload de l\'image en cours...', backgroundColor: Colors.blue);
+          imageSuccess = await service.uploadProjectImage(projectId, _selectedImage!);
+        }
+
+        if (!mounted) return;
+
+        if (imageSuccess) {
+           showTopSnackBar(context, 'Projet créé avec succès !');
+           Navigator.pop(context);
+        } else {
+           showTopSnackBar(context, 'Projet créé mais erreur lors de l\'upload d\'image.', isError: true);
+           // On ferme quand même car le projet est créé
+           Navigator.pop(context);
+        }
       } else {
-        showTopSnackBar(context, service.error ?? 'Erreur lors de la création', isError: true);
+        showTopSnackBar(context, service.error ?? 'Erreur lors de la création du projet', isError: true);
       }
     }
   }
@@ -79,6 +110,38 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Image Picker Section
+                Center(
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: double.infinity,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: _selectedImage == null
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.add_photo_alternate, size: 50, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Ajouter une image de couverture', style: TextStyle(color: Colors.grey)),
+                              ],
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: kIsWeb
+                                  ? Image.network(_selectedImage!.path, fit: BoxFit.cover, errorBuilder: (c, o, s) => const Icon(Icons.image)) // On Web XFile path is blob url usually
+                                  : Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
                 _buildSectionTitle('Informations Générales'),
                 const SizedBox(height: 16),
                 _buildTextField(

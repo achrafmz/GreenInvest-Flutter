@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/project_service.dart';
+import '../services/api_service.dart';
 import '../constants/app_colors.dart';
 import 'project_detail_screen.dart';
 import '../widgets/user_menu_button.dart';
@@ -176,16 +177,46 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                  child: Container(
-                                    height: 120,
-                                    color: Colors.grey[200],
-                                    child: const Center(
-                                      child: Icon(Icons.solar_power, size: 48, color: Colors.grey),
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                    child: Stack(
+                                      children: [
+                                        if (project.imageUrl != null && project.imageUrl!.isNotEmpty)
+                                          Image.network(
+                                            () {
+                                              if (project.imageUrl!.startsWith('http')) {
+                                                return project.imageUrl!;
+                                              }
+                                              
+                                              String baseUrl = ApiService.baseUrl;
+                                              String path = project.imageUrl!;
+                                              if (!baseUrl.endsWith('/') && !path.startsWith('/')) {
+                                                return '$baseUrl/$path';
+                                              }
+                                              return '$baseUrl$path';
+                                            }(),
+                                            height: 120,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (ctx, err, stack) => Container(
+                                              height: 120,
+                                              width: double.infinity,
+                                              color: Colors.grey[200],
+                                              child: const Center(child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey)),
+                                            ),
+                                          )
+                                        else
+                                          Container(
+                                            height: 120,
+                                            width: double.infinity,
+                                            color: Colors.grey[200],
+                                            child: const Center(
+                                              child: Icon(Icons.solar_power, size: 48, color: Colors.grey),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                ),
                                 Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(

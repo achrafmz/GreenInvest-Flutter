@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
 import '../services/project_service.dart';
+import '../services/api_service.dart';
 import '../widgets/user_menu_button.dart';
 import 'project_detail_screen.dart';
 
@@ -160,35 +161,86 @@ class _ProjectOwnerDashboardState extends State<ProjectOwnerDashboard> {
                         },
                         child: Card(
                           margin: EdgeInsets.zero,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
+                          elevation: 2,
+                          clipBehavior: Clip.antiAlias,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IntrinsicHeight(
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                // Image section
+                                SizedBox(
+                                  width: 100,
+                                  child: Stack(
+                                    fit: StackFit.expand,
                                     children: [
-                                      Text(
-                                        project.title,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(
-                                        '${project.currentAmount} / ${project.targetAmount} MAD',
-                                        style: const TextStyle(color: Colors.grey),
-                                      ),
+                                       if (project.imageUrl != null && project.imageUrl!.isNotEmpty)
+                                          Image.network(
+                                            () {
+                                              if (project.imageUrl!.startsWith('http')) {
+                                                return project.imageUrl!;
+                                              }
+                                              String baseUrl = ApiService.baseUrl;
+                                              String path = project.imageUrl!;
+                                              if (!baseUrl.endsWith('/') && !path.startsWith('/')) {
+                                                return '$baseUrl/$path';
+                                              }
+                                              return '$baseUrl$path';
+                                            }(),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (ctx, err, stack) => Container(
+                                              color: Colors.grey[200],
+                                              child: const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
+                                            ),
+                                          )
+                                        else
+                                          Container(
+                                            color: Colors.grey[200],
+                                            child: const Center(
+                                              child: Icon(Icons.solar_power, size: 32, color: Colors.grey),
+                                            ),
+                                          ),
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue, // Améliorer la mapping couleur selon status
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    project.status ?? 'N/A',
-                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                // Text Content
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          project.title,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${project.currentAmount} / ${project.targetAmount} MAD',
+                                          style: const TextStyle(color: Colors.grey, fontSize: 13),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary, 
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              project.status, // Assuming status is plain text
+                                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],

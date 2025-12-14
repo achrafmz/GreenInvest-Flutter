@@ -33,7 +33,7 @@ class ApiService {
       receiveTimeout: const Duration(seconds: 15),
       sendTimeout: const Duration(seconds: 15),
       headers: {
-        'Content-Type': 'application/json',
+        // 'Content-Type': 'application/json', // ❌ Removed to allow FormData to set its own content-type with boundary
         'Accept': 'application/json',
       },
       // ✅ Suivre les redirections
@@ -64,6 +64,7 @@ class ApiService {
   }
 
   Dio get client => _dio;
+  FlutterSecureStorage get storage => _storage;
   
   // ✅ Méthode utilitaire pour tester la connexion
   Future<bool> testConnection() async {
