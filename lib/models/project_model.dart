@@ -13,6 +13,7 @@ class Project {
   final String? typeContrepartie;
   final String? dateCreation;
   final int? nombreInvestisseurs;
+  final String? imageUrl;
 
   Project({
     required this.id,
@@ -28,6 +29,7 @@ class Project {
     this.typeContrepartie,
     this.dateCreation,
     this.nombreInvestisseurs,
+    this.imageUrl,
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class Project {
       typeContrepartie: json['typeContrepartie'] ?? json['type_contrepartie'],
       dateCreation: json['dateCreation'] ?? json['date_creation'],
       nombreInvestisseurs: json['nombreInvestisseurs'] ?? json['nombre_investisseurs'],
+      imageUrl: json['imageUrl'] ?? json['image_url'] ?? json['image'] ?? json['url'] ?? json['photo'] ?? json['picture'],
     );
   }
 
@@ -63,6 +66,40 @@ class Project {
       'typeContrepartie': typeContrepartie,
       'dateCreation': dateCreation,
       'nombreInvestisseurs': nombreInvestisseurs,
+      'imageUrl': imageUrl,
     };
+  }
+  Project copyWith({
+    String? id,
+    String? title,
+    String? description,
+    double? targetAmount,
+    double? currentAmount,
+    String? ownerId,
+    String? status,
+    String? contrepartie,
+    double? pourcentageRendement,
+    int? dureeContrepartie,
+    String? typeContrepartie,
+    String? dateCreation,
+    int? nombreInvestisseurs,
+    String? imageUrl,
+  }) {
+    return Project(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      targetAmount: targetAmount ?? this.targetAmount,
+      currentAmount: currentAmount ?? this.currentAmount,
+      ownerId: ownerId ?? this.ownerId,
+      status: status ?? this.status,
+      contrepartie: contrepartie ?? this.contrepartie,
+      pourcentageRendement: pourcentageRendement ?? this.pourcentageRendement,
+      dureeContrepartie: dureeContrepartie ?? this.dureeContrepartie,
+      typeContrepartie: typeContrepartie ?? this.typeContrepartie,
+      dateCreation: dateCreation ?? this.dateCreation,
+      nombreInvestisseurs: nombreInvestisseurs ?? this.nombreInvestisseurs,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
   }
 }

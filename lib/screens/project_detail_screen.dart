@@ -7,7 +7,9 @@ import '../services/project_service.dart';
 import '../widgets/snackbar_helper.dart';
 import '../widgets/investment_dialog.dart';
 import '../services/investment_service.dart';
+import '../services/investment_service.dart';
 import 'investment_confirmation_screen.dart';
+import '../services/api_service.dart';
 
 class ProjectDetailScreen extends StatelessWidget {
   final Project project;
@@ -33,15 +35,18 @@ class ProjectDetailScreen extends StatelessWidget {
               Stack(
                 children: [
                   Image.network(
-                    'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?auto=format&fit=crop&w=800&q=80',
+                    _getProjectImage(project),
                     height: 250,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 250,
-                      color: Colors.grey[300],
-                      child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
-                    ),
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('❌ Detail Image Error: $error');
+                      return Container(
+                        height: 250,
+                        color: Colors.grey[300],
+                        child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
+                      );
+                    },
                   ),
                   Positioned(
                     top: 16,
@@ -345,9 +350,38 @@ class ProjectDetailScreen extends StatelessWidget {
       if (success) {
         showTopSnackBar(context, 'Statut mis à jour: $newStatus');
         Navigator.pop(context); // Return to previous screen to refresh
-      } else {
+
+} else {
          showTopSnackBar(context, 'Erreur lors de la mise à jour', isError: true);
       }
     }
+  }
+
+
+  String _getProjectImage(Project project) {
+    if (project.imageUrl != null && project.imageUrl!.isNotEmpty) {
+       if (project.imageUrl!.startsWith('http')) {
+         return project.imageUrl!;
+       }
+       
+       // Handle missing slash between baseUrl and path
+       String baseUrl = ApiService.baseUrl;
+       String path = project.imageUrl!;
+       
+       if (!baseUrl.endsWith('/') && !path.startsWith('/')) {
+         return '$baseUrl/$path';
+       }
+       return '$baseUrl$path';
+    }
+    
+    final description = project.description ?? '';
+    if (description.toLowerCase().contains('solaire')) {
+      return 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?auto=format&fit=crop&w=800&q=80';
+    } else if (description.toLowerCase().contains('eolien') || description.toLowerCase().contains('éolien')) {
+      return 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80';
+    } else if (description.toLowerCase().contains('hydraulique')) {
+      return 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf340?auto=format&fit=crop&w=800&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=800&q=80';
   }
 }

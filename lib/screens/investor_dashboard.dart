@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../widgets/user_menu_button.dart';
 import '../services/project_service.dart';
+import '../services/api_service.dart';
+import '../models/project_model.dart';
 import 'project_detail_screen.dart';
 
 class InvestorDashboard extends StatefulWidget {
@@ -22,12 +24,30 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
     );
   }
 
-  String _getProjectImage(String type) {
-    if (type.toLowerCase().contains('solaire')) {
+  String _getProjectImage(dynamic project) { 
+    // Si une image est uploadée, l'utiliser
+    if (project is Project && project.imageUrl != null && project.imageUrl!.isNotEmpty) {
+      if (project.imageUrl!.startsWith('http')) {
+        return project.imageUrl!;
+      }
+      
+      // Robust URL construction
+      String baseUrl = ApiService.baseUrl;
+      String path = project.imageUrl!;
+      
+      if (!baseUrl.endsWith('/') && !path.startsWith('/')) {
+        return '$baseUrl/$path';
+      }
+      return '$baseUrl$path';
+    }
+
+    // Fallback: Images par défaut selon le type
+    final description = (project is Project) ? project.description : (project as String);
+    if (description.toLowerCase().contains('solaire')) {
       return 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613?auto=format&fit=crop&w=800&q=80';
-    } else if (type.toLowerCase().contains('eolien') || type.toLowerCase().contains('éolien')) {
+    } else if (description.toLowerCase().contains('eolien') || description.toLowerCase().contains('éolien')) {
       return 'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80';
-    } else if (type.toLowerCase().contains('hydraulique')) {
+    } else if (description.toLowerCase().contains('hydraulique')) {
       return 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf340?auto=format&fit=crop&w=800&q=80';
     }
     return 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=800&q=80';
@@ -146,16 +166,20 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
                                   ClipRRect(
                                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                                     child: Image.network(
-                                      _getProjectImage(project.description),
+                                      _getProjectImage(project),
                                       height: 180,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
-                                        height: 180,
-                                        width: double.infinity,
-                                        color: Colors.grey[200],
-                                        child: const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
-                                      ),
+                                      errorBuilder: (_, exception, stackTrace) {
+                                        debugPrint('❌ Failed to load image: ${_getProjectImage(project)}');
+                                        debugPrint('❌ Error: $exception');
+                                        return Container(
+                                          height: 180,
+                                          width: double.infinity,
+                                          color: Colors.grey[200],
+                                          child: const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
+                                        );
+                                      },
                                     ),
                                   ),
                                   Positioned(

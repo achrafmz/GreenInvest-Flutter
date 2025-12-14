@@ -1,5 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
+import 'package:http/http.dart' as http;
 import '../models/project_model.dart';
 import 'api_service.dart';
 
@@ -18,39 +23,43 @@ class ProjectService extends ChangeNotifier {
 
   // Pour la page publique (HomeScreen) - Endpoint public sans auth
   Future<void> fetchPublicProjects({int page = 0, int size = 10}) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+  _isLoading = true;
+  _error = null;
+  notifyListeners();
 
-    try {
-      debugPrint('🔍 Fetching PUBLIC projects from /public/projets with page=$page, size=$size');
-      final response = await _apiService.client.get(
-        '/public/projets', 
-        queryParameters: {
-          'page': page,
-          'size': size,
-          'sortBy': 'dateCreation',
-          'direction': 'DESC'
-        }
-      );
-      
-      debugPrint('📥 /public/projets response: ${response.statusCode}');
-      
-      if (response.statusCode == 200) {
-        _projects = _parseProjects(response.data);
-        debugPrint('✅ Loaded ${_projects.length} public projects');
-      } else {
-        _error = 'Erreur serveur: ${response.statusCode}';
-        debugPrint('❌ Server error: ${response.statusCode}');
+  try {
+    debugPrint('🔍 Fetching PUBLIC projects from /public/projets with page=$page, size=$size');
+    final response = await _apiService.client.get(
+      '/public/projets', 
+      queryParameters: {
+        'page': page,
+        'size': size,
+        'sortBy': 'dateCreation',
+        'direction': 'DESC'
       }
-    } catch (e) {
-      _error = e.toString();
-      debugPrint('❌ Erreur chargement projets publics: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+    );
+    
+    debugPrint('📥 /public/projets response: ${response.statusCode}');
+    
+    if (response.statusCode == 200) {
+      _projects = _parseProjects(response.data);
+      debugPrint('✅ Loaded ${_projects.length} public projects');
+      
+      if (_projects.isNotEmpty) {
+        debugPrint('🔍 Parsed Project [0] imageUrl: ${_projects[0].imageUrl}');
+      }
+    } else {
+      _error = 'Erreur serveur: ${response.statusCode}';
+      debugPrint('❌ Server error: ${response.statusCode}');
     }
+  } catch (e) {
+    _error = e.toString();
+    debugPrint('❌ Erreur chargement projets publics: $e');
+  } finally {
+    _isLoading = false;
+    notifyListeners();
   }
+}
 
   // Pour l'admin (PendingProjectsScreen) - Endpoint avec auth
   Future<void> fetchProjects({int page = 0, int size = 10}) async {
@@ -122,6 +131,12 @@ class ProjectService extends ChangeNotifier {
         }).toList();
         
         debugPrint('✅ Loaded ${_ownerProjects.length} owner projects');
+        if (listData.isNotEmpty) {
+           final first = listData[0];
+           if (first is Map) {
+             debugPrint('🔑 Owner Projects Keys: ${first.keys.toList()}');
+           }
+        }
       } else {
         _error = 'Erreur serveur (Owner): ${response.statusCode}';
       }
@@ -238,7 +253,7 @@ class ProjectService extends ChangeNotifier {
     }
   }
 
-  Future<bool> createProject({
+  Future<String?> createProject({
     required String nom,
     required String description,
     required double montantObjectif,
@@ -268,12 +283,116 @@ class ProjectService extends ChangeNotifier {
       print('✅ Create Project Response: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Le backend retourne un wrapper {success: true, data: {...}}
+        dynamic projectData = response.data;
+        if (projectData is Map && projectData.containsKey('data')) {
+           projectData = projectData['data'];
+        }
+        
+        final createdProject = Project.fromJson(projectData);
+        print('✅ Project Created ID: ${createdProject.id}');
+        
         await fetchPublicProjects(); 
-        return true;
+        return createdProject.id;
       }
-      return false;
+      return null;
     } catch (e) {
       print('❌ Create Project Error: $e');
+      _error = e.toString();
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> uploadProjectImage(String projectId, XFile imageFile) async {
+    _isLoading = true;
+    notifyListeners();
+    print('🚀 Uploading image for project: $projectId (via http)');
+
+    try {
+      final token = await _apiService.storage.read(key: 'access_token');
+      final uri = Uri.parse('${ApiService.baseUrl}/projets/$projectId/image');
+      
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Headers
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      // Note: MultipartRequest sets Content-Type automatically with boundary
+
+      // File
+      final bytes = await imageFile.readAsBytes();
+      final mimeStr = lookupMimeType(imageFile.name) ?? 'image/jpeg';
+      final mimeType = MediaType.parse(mimeStr);
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        bytes,
+        filename: imageFile.name,
+        contentType: mimeType,
+      ));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('✅ Upload Image Response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        // Parse the response to get the updated project data with image
+        try {
+          final jsonResponse = jsonDecode(response.body);
+          if (jsonResponse is Map && jsonResponse['success'] == true && jsonResponse['data'] != null) {
+            final updatedProjectData = jsonResponse['data'];
+            final String? newImageUrl = updatedProjectData['imageUrl']; // The logs showed this key exists
+            
+            if (newImageUrl != null) {
+              print('✅ Found new image URL in response: $newImageUrl');
+              
+              // Update _projects list
+              final indexFn = _projects.indexWhere((p) => p.id == projectId);
+              if (indexFn != -1) {
+                _projects[indexFn] = _projects[indexFn].copyWith(imageUrl: newImageUrl);
+              }
+
+              // Update _ownerProjects list
+              final indexOwner = _ownerProjects.indexWhere((p) => p.id == projectId);
+              if (indexOwner != -1) {
+                _ownerProjects[indexOwner] = _ownerProjects[indexOwner].copyWith(imageUrl: newImageUrl);
+              } else {
+                // If not in list, add it!
+                print('➕ Adding new project to local owner list');
+                 _ownerProjects.insert(0, Project.fromJson(updatedProjectData));
+              }
+              
+              notifyListeners();
+            }
+
+            // Extract ownerId to refresh correctly
+            final String? ownerId = updatedProjectData['ownerId'] ?? updatedProjectData['porteurId'];
+            if (ownerId != null) {
+               // Refresh owner list from server to be sure
+               await fetchOwnerProjects(ownerId);
+            }
+          }
+        } catch (e) {
+          print('⚠️ Error parsing upload response for local update: $e');
+        }
+
+        // We still fetch public to keep in sync
+        await fetchPublicProjects();
+        return true;
+        return true;
+      } else {
+        print('❌ Upload failed code: ${response.statusCode}');
+        print('❌ Server Response: ${response.body}');
+        _error = 'Erreur upload image: ${response.statusCode} - ${response.body}';
+        return false;
+      }
+    } catch (e) {
+       print('❌ Upload Image Error: $e');
       _error = e.toString();
       return false;
     } finally {
