@@ -143,32 +143,35 @@ class _PendingProjectsScreenState extends State<PendingProjectsScreen> {
                       separatorBuilder: (context, index) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final project = filtered[index];
-                        return Card(
-                          elevation: 2,
-                          child: ListTile(
-                            title: Text(project.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Porteur: ${project.ownerId}'),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Text('Statut: '),
-                                    _getStatusChip(project.status),
-                                  ],
-                                ),
-                              ],
+                        return Semantics(
+                          label: 'project_item_$index',
+                          child: Card(
+                            elevation: 2,
+                            child: ListTile(
+                              title: Text(project.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Porteur: ${project.ownerId}'),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Text('Statut: '),
+                                      _getStatusChip(project.status),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
+                                ).then((_) {
+                                   _loadProjects(); // Refresh list on return
+                                });
+                              },
                             ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => ProjectDetailScreen(project: project)),
-                              ).then((_) {
-                                 _loadProjects(); // Refresh list on return
-                              });
-                            },
                           ),
                         );
                       },

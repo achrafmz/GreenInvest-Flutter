@@ -265,29 +265,32 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
                                     const SizedBox(height: 16),
                                     SizedBox(
                                       width: double.infinity,
-                                      child: OutlinedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => ProjectDetailScreen(project: project),
+                                      child: Semantics(
+                                        label: 'btn_view_project_$index',
+                                        child: OutlinedButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => ProjectDetailScreen(project: project),
+                                              ),
+                                            );
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: AppColors.primary,
+                                            side: BorderSide(color: AppColors.primary),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
                                             ),
-                                          );
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: AppColors.primary,
-                                          side: BorderSide(color: AppColors.primary),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
                                           ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: const [
-                                            Text('Voir plus'),
-                                            SizedBox(width: 8),
-                                            Icon(Icons.arrow_forward_ios, size: 16),
-                                          ],
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: const [
+                                              Text('Voir plus'),
+                                              SizedBox(width: 8),
+                                              Icon(Icons.arrow_forward_ios, size: 16),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),

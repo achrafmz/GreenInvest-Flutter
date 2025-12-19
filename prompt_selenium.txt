@@ -1,0 +1,57 @@
+Voici un prompt complet et très précis que vous pouvez copier-coller à une IA (Claude, ChatGPT, ou moi-même dans une autre fenêtre) pour générer exactement ce qu'il faut dans votre nouveau projet.
+
+---
+**COPIEZ LE TEXTE CI-DESSOUS :**
+
+Je veux créer un projet de tests automatisés **Selenium Java (Maven)** pour mon application **Flutter Web**.
+L'application tourne localement sur `http://localhost:8083`.
+
+**Contexte Technique :**
+*   **Techno :** Java, Selenium 4, Maven.
+*   **Navigateur :** Edge (EdgeDriver).
+*   **Spécificité Flutter :** J'ai déjà balisé mon code Flutter avec des `Semantics` qui génèrent des `aria-label`. Tu dois utiliser des sélecteurs CSS `[aria-label='...']` pour interagir avec les éléments.
+
+**Ce que tu dois générer :**
+1.  Le fichier `pom.xml` avec les dépendances `selenium-java` et `webdrivermanager`.
+2.  Une classe Main Java qui exécute les 3 scénarios suivants séquentiellement.
+
+**Les Scénarios et Sélecteurs à utiliser :**
+
+**Scénario 1 : Inscription Porteur & Création Projet**
+1.  Aller sur la page d'accueil.
+2.  Ouvrir l'onglet Inscription : clic sur `tab_signup`.
+3.  Remplir le formulaire :
+    *   Username : `input_username`
+    *   Email : `input_email`
+    *   Password : `input_password`
+4.  Choisir le rôle "Porteur de projet" :
+    *   Clic sur `dropdown_role`.
+    *   Puis clic sur l'élément contenant le texte "Porteur de projet" (via XPath `//*[text()='Porteur de projet']` ou similaire).
+5.  Valider : clic sur `btn_submit_auth`.
+6.  Une fois connecté (porteur), aller sur "Créer projet" : clic sur `btn_create_project_nav`.
+7.  Remplir le projet :
+    *   Nom : `input_project_name`
+    *   Description : `input_project_desc`
+    *   Montant : `input_project_amount`
+    *   Contrepartie : `input_project_counterpart`
+    *   Rendement : `input_project_roi`
+    *   Durée : `input_project_duration`
+8.  Valider la création : clic sur `btn_submit_project`.
+
+**Scénario 2 : Admin Validation**
+1.  Se déconnecter ou relancer le navigateur.
+2.  Aller sur l'onglet Connexion : `tab_login`.
+3.  Login Admin (user: "admin", pass: "admin123").
+4.  Valider : `btn_submit_auth`.
+5.  Sur le dashboard Admin, cliquer sur la carte "En attente" : `card_pending_projects`.
+6.  Dans la liste, cliquer sur le premier projet (index 0) : `project_item_0`.
+7.  Dans le détail, cliquer sur "Valider" : `btn_validate_project`.
+
+**Scénario 3 : Investissement**
+1.  Se déconnecter.
+2.  S'inscrire en tant qu'investisseur (Par défaut) : `tab_signup`, remplir champs, valider `btn_submit_auth`.
+3.  Sur le dashboard Investisseur, voir le premier projet : clic sur `btn_view_project_0` (bouton "Voir plus").
+4.  Dans le détail, cliquer sur "Investir maintenant" : `btn_invest_now`.
+
+Génère moi le code Java robuste (avec des `WebDriverWait` car Flutter Web est lent) pour ces scénarios.
+---

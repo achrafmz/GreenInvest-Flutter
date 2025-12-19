@@ -7,21 +7,21 @@ class ApiService {
   late final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   
-  // ✅ URL de base STATIQUE selon la plateforme
+  // URL de base STATIQUE selon la plateforme
   static String get baseUrl {
     if (kIsWeb) {
-      // ✅ Flutter Web : Tester d'abord avec 127.0.0.1, puis localhost
-      // Note: Parfois les navigateurs préfèrent 127.0.0.1
+      // Flutter Web : Tester d'abord avec 127.0.0.1, puis localhost
+      
       return 'http://127.0.0.1:8081';
       // Alternative : 'http://localhost:8081' si 127.0.0.1 ne marche pas
     } else if (defaultTargetPlatform == TargetPlatform.android) {
-      // ✅ Android Emulator : 10.0.2.2 = localhost de la machine hôte
+      // Android Emulator : 10.0.2.2 = localhost de la machine hôte
       return 'http://10.0.2.2:8081';
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      // ✅ iOS Simulator : localhost fonctionne directement
+      // iOS Simulator : localhost fonctionne directement
       return 'http://localhost:8081';
     } else {
-      // ✅ Par défaut (macOS, Windows, Linux)
+      // Par défaut (macOS, Windows, Linux)
       return 'http://localhost:8081';
     }
   }
@@ -33,17 +33,17 @@ class ApiService {
       receiveTimeout: const Duration(seconds: 15),
       sendTimeout: const Duration(seconds: 15),
       headers: {
-        // 'Content-Type': 'application/json', // ❌ Removed to allow FormData to set its own content-type with boundary
+        // 'Content-Type': 'application/json', // Removed to allow FormData to set its own content-type with boundary
         'Accept': 'application/json',
       },
-      // ✅ Suivre les redirections
+      // Suivre les redirections
       followRedirects: true,
       maxRedirects: 5,
-      // ✅ Valider le status code
+      // Valider le status code
       validateStatus: (status) => status != null && status < 500,
     ));
 
-    // ✅ Intercepteur pour ajouter le token automatiquement
+    // Intercepteur pour ajouter le token automatiquement
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _storage.read(key: 'access_token');
@@ -66,7 +66,7 @@ class ApiService {
   Dio get client => _dio;
   FlutterSecureStorage get storage => _storage;
   
-  // ✅ Méthode utilitaire pour tester la connexion
+  // Méthode utilitaire pour tester la connexion
   Future<bool> testConnection() async {
     try {
       final response = await _dio.get(
@@ -82,7 +82,7 @@ class ApiService {
     }
   }
   
-  // ✅ Créer une instance Dio sans authentification (pour signup, login)
+  // Créer une instance Dio sans authentification (pour signup, login)
   static Dio createPublicClient() {
     return Dio(BaseOptions(
       baseUrl: baseUrl,

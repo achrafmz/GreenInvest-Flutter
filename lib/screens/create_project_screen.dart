@@ -149,6 +149,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   label: 'Nom du projet',
                   hint: 'Ex: Ferme Solaire Agadir',
                   icon: Icons.title,
+                  semanticsLabel: 'input_project_name',
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -157,6 +158,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   hint: 'Décrivez votre projet en détail...',
                   icon: Icons.description,
                   maxLines: 4,
+                  semanticsLabel: 'input_project_desc',
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -166,6 +168,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   icon: Icons.attach_money,
                   keyboardType: TextInputType.number,
                   isNumber: true,
+                  semanticsLabel: 'input_project_amount',
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -173,6 +176,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   label: 'Détail de la contrepartie',
                   hint: 'Ex: Part des bénéfices annuels...',
                   icon: Icons.card_giftcard,
+                  semanticsLabel: 'input_project_counterpart',
                 ),
 
                 const SizedBox(height: 32),
@@ -189,6 +193,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         icon: Icons.percent,
                         keyboardType: TextInputType.number,
                         isNumber: true,
+                        semanticsLabel: 'input_project_roi',
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -200,6 +205,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         icon: Icons.timer,
                         keyboardType: TextInputType.number,
                         isNumber: true,
+                        semanticsLabel: 'input_project_duration',
                       ),
                     ),
                   ],
@@ -242,27 +248,30 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   builder: (context, service, child) {
                     return SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: service.isLoading ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: service.isLoading
-                            ? const SizedBox(
-                                height: 20, width: 20,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                              )
-                            : const Text(
-                                'Créer le projet',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      child: Semantics(
+                          label: 'btn_submit_project',
+                          child: ElevatedButton(
+                            onPressed: service.isLoading ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                      ),
+                              elevation: 2,
+                            ),
+                            child: service.isLoading
+                                ? const SizedBox(
+                                    height: 20, width: 20,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text(
+                                    'Créer le projet',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                          ),
+                        ),
                     );
                   },
                 ),
@@ -294,34 +303,38 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
     bool isNumber = false,
+    String? semanticsLabel,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Champ requis';
-            if (isNumber && double.tryParse(value) == null) return 'Valeur invalide';
-            return null;
-          },
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, color: Colors.grey),
-            filled: true,
-            fillColor: AppColors.inputBg,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+        Semantics(
+            label: semanticsLabel,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Champ requis';
+                if (isNumber && double.tryParse(value) == null) return 'Valeur invalide';
+                return null;
+              },
+              decoration: InputDecoration(
+                hintText: hint,
+                prefixIcon: Icon(icon, color: Colors.grey),
+                filled: true,
+                fillColor: AppColors.inputBg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                alignLabelWithHint: maxLines > 1,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              ),
             ),
-            alignLabelWithHint: maxLines > 1,
-            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           ),
-        ),
       ],
     );
   }
