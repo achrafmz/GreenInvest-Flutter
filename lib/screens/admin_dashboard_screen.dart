@@ -191,13 +191,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       const Color(0xFFA78BFA),
                                       () => Navigator.pushNamed(context, '/admin-users'),
                                     ),
-                                    _buildModernStatCard(
-                                      'En attente',
-                                      statsProjets['projetsEnAttente']?.toString() ?? '0',
-                                      Icons.schedule_rounded,
-                                      const Color(0xFFF59E0B),
-                                      const Color(0xFFFBBF24),
-                                      () => Navigator.pushNamed(context, '/pending-projects', arguments: 'EN_ATTENTE'),
+                                    Semantics(
+                                      label: 'card_pending_projects',
+                                      child: _buildModernStatCard(
+                                        'En attente',
+                                        statsProjets['projetsEnAttente']?.toString() ?? '0',
+                                        Icons.schedule_rounded,
+                                        const Color(0xFFF59E0B),
+                                        const Color(0xFFFBBF24),
+                                        () => Navigator.pushNamed(context, '/pending-projects', arguments: 'EN_ATTENTE'),
+                                      ),
                                     ),
                                     _buildModernStatCard(
                                       'Validés',

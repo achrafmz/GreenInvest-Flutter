@@ -145,23 +145,26 @@ class _AuthScreenState extends State<AuthScreen> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () => setState(() => _isLoginMode = true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: _isLoginMode ? Colors.white : null,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              bottomLeft: Radius.circular(24),
+                        child: Semantics(
+                          label: 'tab_login',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: _isLoginMode ? Colors.white : null,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                bottomLeft: Radius.circular(24),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            'Connexion',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: _isLoginMode
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
+                            child: Text(
+                              'Connexion',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _isLoginMode
+                                    ? AppColors.textPrimary
+                                    : AppColors.textSecondary,
+                              ),
                             ),
                           ),
                         ),
@@ -170,23 +173,26 @@ class _AuthScreenState extends State<AuthScreen> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () => setState(() => _isLoginMode = false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: _isLoginMode ? null : Colors.white,
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(24),
-                              bottomRight: Radius.circular(24),
+                        child: Semantics(
+                          label: 'tab_signup',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: _isLoginMode ? null : Colors.white,
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(24),
+                                bottomRight: Radius.circular(24),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            'Créer un compte',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: _isLoginMode
-                                  ? AppColors.textSecondary
-                                  : AppColors.textPrimary,
+                            child: Text(
+                              'Créer un compte',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _isLoginMode
+                                    ? AppColors.textSecondary
+                                    : AppColors.textPrimary,
+                              ),
                             ),
                           ),
                         ),
@@ -203,6 +209,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 controller: _usernameController,
                 icon: Icons.person,
                 hintText: 'username',
+                semanticsLabel: 'input_username',
               ),
               const SizedBox(height: 24),
 
@@ -213,6 +220,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   controller: _emailController,
                   icon: Icons.email,
                   hintText: 'votre@email.com',
+                  semanticsLabel: 'input_email',
                 ),
                 const SizedBox(height: 24),
               ],
@@ -224,6 +232,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 icon: Icons.lock,
                 hintText: '••••••••',
                 obscureText: true,
+                semanticsLabel: 'input_password',
               ),
 
               // ✅ RÔLE (Uniquement pour SIGNUP)
@@ -241,24 +250,27 @@ class _AuthScreenState extends State<AuthScreen> {
                       ? const Center(child: CircularProgressIndicator())
                       : SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _handleAuth,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: Semantics(
+                              label: 'btn_submit_auth',
+                              child: ElevatedButton(
+                                onPressed: _handleAuth,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  _isLoginMode ? 'Se connecter' : 'Créer un compte',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Text(
-                              _isLoginMode ? 'Se connecter' : 'Créer un compte',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         );
                 },
               ),
@@ -275,26 +287,30 @@ class _AuthScreenState extends State<AuthScreen> {
     required IconData icon,
     required String hintText,
     bool obscureText = false,
+    String? semanticsLabel,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: AppColors.textSecondary),
-            hintText: hintText,
-            filled: true,
-            fillColor: AppColors.inputBg,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+        Semantics(
+            label: semanticsLabel,
+            child: TextField(
+              controller: controller,
+              obscureText: obscureText,
+              decoration: InputDecoration(
+                prefixIcon: Icon(icon, color: AppColors.textSecondary),
+                hintText: hintText,
+                filled: true,
+                fillColor: AppColors.inputBg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -305,22 +321,25 @@ class _AuthScreenState extends State<AuthScreen> {
       children: [
         const Text('Rôle', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _selectedRole,
-          onChanged: (value) => setState(() => _selectedRole = value!),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.inputBg,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+        Semantics(
+          label: 'dropdown_role',
+          child: DropdownButtonFormField<String>(
+            value: _selectedRole,
+            onChanged: (value) => setState(() => _selectedRole = value!),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.inputBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
+            items: const [
+              DropdownMenuItem(value: 'Investisseur', child: Text('Investisseur')),
+              DropdownMenuItem(
+                  value: 'Porteur de projet', child: Text('Porteur de projet')),
+            ],
           ),
-          items: const [
-            DropdownMenuItem(value: 'Investisseur', child: Text('Investisseur')),
-            DropdownMenuItem(
-                value: 'Porteur de projet', child: Text('Porteur de projet')),
-          ],
         ),
       ],
     );

@@ -234,27 +234,33 @@ class ProjectDetailScreen extends StatelessWidget {
                           return Row(
                             children: [
                               Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => _updateStatus(context, 'REJETE'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                child: Semantics(
+                                    label: 'btn_reject_project',
+                                    child: ElevatedButton(
+                                      onPressed: () => _updateStatus(context, 'REJETE'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                      ),
+                                      child: const Text('Refuser'),
+                                    ),
                                   ),
-                                  child: const Text('Refuser'),
-                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => _updateStatus(context, 'VALIDE'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                child: Semantics(
+                                    label: 'btn_validate_project',
+                                    child: ElevatedButton(
+                                      onPressed: () => _updateStatus(context, 'VALIDE'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                      ),
+                                      child: const Text('Valider'),
+                                    ),
                                   ),
-                                  child: const Text('Valider'),
-                                ),
                               ),
                             ],
                           );
@@ -302,9 +308,12 @@ class ProjectDetailScreen extends StatelessWidget {
                               ),
                               elevation: 2,
                             ),
-                            child: const Text(
-                              'Investir maintenant',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            child: Semantics(
+                              label: 'btn_invest_now',
+                              child: const Text(
+                                'Investir maintenant',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ),
                         );

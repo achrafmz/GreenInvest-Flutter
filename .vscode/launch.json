@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flutter Web (Chrome - Port 8083)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8083",
+                "--web-renderer=html"
+            ],
+            "deviceId": "chrome"
+        },
+        {
+            "name": "Flutter Web (Edge - Port 8083)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8083",
+                "--web-renderer=html"
+            ],
+            "deviceId": "edge"
+        }
+    ]
+}
