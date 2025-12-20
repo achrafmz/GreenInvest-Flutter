@@ -1,0 +1,6 @@
+projectKey=greeninvest-flutter
+serverUrl=http://localhost:9000
+serverVersion=25.11.0.114957
+dashboardUrl=http://localhost:9000/dashboard?id=greeninvest-flutter
+ceTaskId=f73d068d-45fa-4ea3-825a-68156cc43156
+ceTaskUrl=http://localhost:9000/api/ce/task?id=f73d068d-45fa-4ea3-825a-68156cc43156
