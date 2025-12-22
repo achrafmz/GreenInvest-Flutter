@@ -268,7 +268,8 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
                                       child: Semantics(
                                         label: 'btn_view_project_$index',
                                         child: OutlinedButton(
-                                          onPressed: () {
+                                        key: Key('btn_view_project_$index'),
+                                        onPressed: () {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(

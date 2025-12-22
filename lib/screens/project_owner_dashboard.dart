@@ -79,6 +79,7 @@ class _ProjectOwnerDashboardState extends State<ProjectOwnerDashboard> {
                 child: Semantics(
                     label: 'btn_create_project_nav',
                     child: ElevatedButton(
+                      key: const Key('btn_create_project_nav'),
                       onPressed: () {
                         Navigator.pushNamed(context, '/create-project');
                       },

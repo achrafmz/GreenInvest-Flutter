@@ -77,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    key: const Key('btn_nav_to_login'),
                     onPressed: () {
                       Navigator.pushReplacementNamed(context, '/auth');
                     },
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
+                    key: const Key('btn_nav_to_signup'),
                     onPressed: () {
                       Navigator.pushReplacementNamed(
                         context, 

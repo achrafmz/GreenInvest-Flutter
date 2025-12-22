@@ -96,6 +96,7 @@ class _PendingProjectsScreenState extends State<PendingProjectsScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: ChoiceChip(
+                      key: Key('chip_status_$status'),
                       label: Text(_formatStatus(status)),
                       selected: isSelected,
                       onSelected: (selected) {

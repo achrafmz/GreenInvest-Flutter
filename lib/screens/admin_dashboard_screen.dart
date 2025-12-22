@@ -192,6 +192,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       () => Navigator.pushNamed(context, '/admin-users'),
                                     ),
                                     Semantics(
+                                      key: const Key('card_pending_projects'),
                                       label: 'card_pending_projects',
                                       child: _buildModernStatCard(
                                         'En attente',

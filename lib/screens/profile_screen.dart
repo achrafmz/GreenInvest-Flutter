@@ -91,6 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : null,
         actions: [
           IconButton(
+            key: const Key('btn_edit_profile'),
             icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed: () {
               if (_isEditing) {
@@ -148,6 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.account_balance_wallet,
                   enabled: _isEditing,
                   isNumber: true,
+                  semanticsLabel: 'input_solde',
                 ),
               ],
 
@@ -155,19 +157,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  child: Semantics(
+                    label: 'btn_save_profile',
+                    child: ElevatedButton(
+                      key: const Key('btn_save_profile'),
+                      onPressed: _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Enregistrer les modifications',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      child: const Text(
+                        'Enregistrer les modifications',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ),
@@ -185,8 +191,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required IconData icon,
     bool enabled = true,
     bool isNumber = false,
+    String? semanticsLabel,
   }) {
-    return TextFormField(
+    return Semantics(
+      label: semanticsLabel,
+      child: TextFormField(
       controller: controller,
       enabled: enabled,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
@@ -204,6 +213,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderSide: BorderSide.none,
         ),
       ),
-    );
-  }
+      key: semanticsLabel != null ? Key(semanticsLabel) : null,
+    ),
+  );
+}
 }

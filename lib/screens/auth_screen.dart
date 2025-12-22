@@ -64,7 +64,9 @@ class _AuthScreenState extends State<AuthScreen> {
         if (roleLower.contains('admin')) {
           Navigator.pushReplacementNamed(context, '/admin-dashboard');
         } 
-        // Tous les autres (investisseur, porteur) → Page d'accueil avec projets publics
+        else if (roleLower.contains('porteur') || roleLower.contains('project_owner')) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
         else {
           Navigator.pushReplacementNamed(context, '/');
         }
@@ -143,10 +145,13 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _isLoginMode = true),
-                        child: Semantics(
-                          label: 'tab_login',
+                      child: Semantics(
+                        button: true,
+                        label: 'tab_login',
+                        identifier: 'tab_login',
+                        child: GestureDetector(
+                          key: const Key('tab_login'),
+                          onTap: () => setState(() => _isLoginMode = true),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             alignment: Alignment.center,
@@ -171,10 +176,13 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _isLoginMode = false),
-                        child: Semantics(
-                          label: 'tab_signup',
+                      child: Semantics(
+                        button: true,
+                        label: 'tab_signup',
+                        identifier: 'tab_signup',
+                        child: GestureDetector(
+                          key: const Key('tab_signup'),
+                          onTap: () => setState(() => _isLoginMode = false),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             alignment: Alignment.center,
@@ -252,7 +260,10 @@ class _AuthScreenState extends State<AuthScreen> {
                           width: double.infinity,
                           child: Semantics(
                               label: 'btn_submit_auth',
+                              identifier: 'btn_submit_auth',
+                              button: true,
                               child: ElevatedButton(
+                                key: const Key('btn_submit_auth'),
                                 onPressed: _handleAuth,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
@@ -296,7 +307,9 @@ class _AuthScreenState extends State<AuthScreen> {
         const SizedBox(height: 8),
         Semantics(
             label: semanticsLabel,
+            identifier: semanticsLabel,
             child: TextField(
+              key: semanticsLabel != null ? Key(semanticsLabel) : null,
               controller: controller,
               obscureText: obscureText,
               decoration: InputDecoration(
@@ -324,7 +337,8 @@ class _AuthScreenState extends State<AuthScreen> {
         Semantics(
           label: 'dropdown_role',
           child: DropdownButtonFormField<String>(
-            value: _selectedRole,
+          key: const Key('dropdown_role'),
+          value: _selectedRole,
             onChanged: (value) => setState(() => _selectedRole = value!),
             decoration: InputDecoration(
               filled: true,

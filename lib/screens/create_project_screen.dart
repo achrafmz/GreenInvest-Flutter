@@ -24,7 +24,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   final _contrepartieController = TextEditingController();
   final _rendementController = TextEditingController();
   final _dureeController = TextEditingController();
-  String _typeContrepartie = 'POURCENTAGE_BENEFICES';
+  String? _typeContrepartie; // Null by default to force selection
 
   XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
@@ -62,7 +62,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         contrepartie: _contrepartieController.text.trim(),
         pourcentageRendement: double.parse(_rendementController.text),
         dureeContrepartie: int.parse(_dureeController.text),
-        typeContrepartie: _typeContrepartie,
+        typeContrepartie: _typeContrepartie!,
       );
 
       if (!mounted) return;
@@ -215,11 +215,26 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 const Text('Type de Contrepartie', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
+                  key: const Key('dropdown_project_type'),
                   value: _typeContrepartie,
+                  hint: const Text('Sélectionner un type'),
+                  validator: (value) => value == null ? 'Veuillez choisir un type' : null,
                   items: const [
                     DropdownMenuItem(
                       value: 'POURCENTAGE_BENEFICES', 
                       child: Text('Pourcentage Bénéfices')
+                    ),
+                    DropdownMenuItem(
+                      value: 'TAUX_INTERET_FIXE', 
+                      child: Text('Taux d\'intérêt fixe')
+                    ),
+                    DropdownMenuItem(
+                      value: 'ACTIONS', 
+                      child: Text('Actions / Titres')
+                    ),
+                    DropdownMenuItem(
+                      value: 'PRODUITS_GRATUITS', 
+                      child: Text('Produits gratuits')
                     ),
                     DropdownMenuItem(
                       value: 'TITRES_PARTICIPATIFS', 
@@ -230,7 +245,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       child: Text('Autre')
                     ),
                   ],
-                  onChanged: (v) => setState(() => _typeContrepartie = v!),
+                  onChanged: (v) => setState(() => _typeContrepartie = v),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: AppColors.inputBg,
@@ -251,6 +266,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       child: Semantics(
                           label: 'btn_submit_project',
                           child: ElevatedButton(
+                            key: const Key('btn_submit_project'),
                             onPressed: service.isLoading ? null : _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
@@ -313,12 +329,19 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         Semantics(
             label: semanticsLabel,
             child: TextFormField(
+              key: semanticsLabel != null ? Key(semanticsLabel) : null,
               controller: controller,
               keyboardType: keyboardType,
               maxLines: maxLines,
               validator: (value) {
                 if (value == null || value.isEmpty) return 'Champ requis';
-                if (isNumber && double.tryParse(value) == null) return 'Valeur invalide';
+                final n = double.tryParse(value);
+                if (isNumber && n == null) return 'Valeur invalide';
+                
+                // Extra validations for tests
+                if (isNumber && n! < 0) return 'La valeur ne peut pas être négative';
+                if (semanticsLabel == 'input_project_roi' && n! > 100) return 'Le rendement ne peut pas dépasser 100%';
+                
                 return null;
               },
               decoration: InputDecoration(

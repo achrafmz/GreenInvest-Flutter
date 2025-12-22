@@ -140,42 +140,48 @@ class InvestmentConfirmationScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Implement actual PDF download if backend provides URL
-                              showTopSnackBar(context, 'Téléchargement du contrat...');
-                            },
-                            icon: const Icon(Icons.download, size: 16),
-                            label: const Text('Télécharger le contrat PDF'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.grey[700],
-                              side: BorderSide(color: Colors.grey[300]!),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        Semantics(
+                          label: 'btn_download_contract',
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // TODO: Implement actual PDF download if backend provides URL
+                                showTopSnackBar(context, 'Téléchargement du contrat...');
+                              },
+                              icon: const Icon(Icons.download, size: 16),
+                              label: const Text('Télécharger le contrat PDF'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.grey[700],
+                                side: BorderSide(color: Colors.grey[300]!),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/investor-dashboard');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        Semantics(
+                          label: 'btn_back_to_projects',
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushReplacementNamed(context, '/investor-dashboard');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                            ),
-                            child: const Text(
-                              'Retour aux projets',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              child: const Text(
+                                'Retour aux projets',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ),
                         ),

@@ -111,6 +111,7 @@ class _InvestmentDialogState extends State<InvestmentDialog> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                key: const Key('input_investment_amount'),
                 controller: _amountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
@@ -143,10 +144,12 @@ class _InvestmentDialogState extends State<InvestmentDialog> {
       ),
       actions: [
         TextButton(
+          key: const Key('btn_cancel_investment'),
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: const Text('Annuler'),
         ),
         ElevatedButton(
+          key: const Key('btn_confirm_investment'),
           onPressed: _isLoading ? null : _submit,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,

@@ -116,6 +116,7 @@ class _AnimatedSnackBarState extends State<_AnimatedSnackBar>
               child: Material(
                 color: Colors.transparent,
                 child: Container(
+                  key: const Key('snackbar_container'),
                   margin: const EdgeInsets.symmetric(horizontal: 16), // Margin for mobile
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -153,13 +154,16 @@ class _AnimatedSnackBarState extends State<_AnimatedSnackBar>
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          widget.message,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            height: 1.4,
+                        child: Semantics(
+                          label: 'snackbar_message',
+                          child: Text(
+                            widget.message,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
                           ),
                         ),
                       ),
